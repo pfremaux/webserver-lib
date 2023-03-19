@@ -1,4 +1,4 @@
-package commons.lib.extra.server.http.handler.testLib.annotations;
+package webserver.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
