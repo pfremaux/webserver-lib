@@ -42,7 +42,7 @@ public class EntryPoint {
 				"--gen-js-path", "Generate a Javascript library to allow web client to call this server." //
 		),
 				Map.of("--ksPath", "--ksPass"));
-		runServer(args, cliLoader, Set.of("commons.lib.extra.server.http.handler.testLib.example.MyEndpoints"));
+		runServer(args, cliLoader, Set.of("webserver.example.MyEndpoints"));
 	}
 
 	public static void runServer(String[] args, CliParameterLoader cliLoader, Set<String> classesPath) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, UnrecoverableKeyException, KeyManagementException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
