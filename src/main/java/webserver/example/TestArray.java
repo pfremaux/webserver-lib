@@ -1,7 +1,7 @@
 package webserver.example;
 
-import commons.lib.extra.server.http.handler.testLib.annotations.JsonField;
-import webserver.example.Body;
+
+import webserver.annotations.JsonField;
 
 import java.util.List;
 

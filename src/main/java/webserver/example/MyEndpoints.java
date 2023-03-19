@@ -3,8 +3,8 @@ package webserver.example;
 import java.util.List;
 import java.util.Map;
 
-import commons.lib.extra.server.http.handler.testLib.annotations.Endpoint;
 import tools.MdDoc;
+import webserver.annotations.Endpoint;
 
 public class MyEndpoints {
 
