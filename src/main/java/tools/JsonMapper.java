@@ -1,6 +1,7 @@
 package tools;
 
-import commons.lib.extra.server.http.handler.testLib.annotations.JsonField;
+
+import webserver.annotations.JsonField;
 
 import java.lang.reflect.*;
 import java.util.*;

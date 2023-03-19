@@ -2,9 +2,9 @@ package webserver.generators;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import commons.lib.extra.server.http.handler.testLib.annotations.Endpoint;
 import tools.JsonMapper;
 import tools.MdDoc;
+import webserver.annotations.Endpoint;
 
 import java.io.IOException;
 import java.io.OutputStream;
