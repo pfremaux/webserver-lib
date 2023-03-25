@@ -14,6 +14,25 @@ public class JsonMapper {
 
     }
 
+
+
+    public static StringBuilder fillWithJsonFormat(StringBuilder builder, Map<String, String> stringStringMap) {
+        builder.append("{");
+        for (Map.Entry<String, String> entry : stringStringMap.entrySet()) {
+            builder.append("\"");
+            builder.append(entry.getKey());
+            builder.append("\":\"");
+            builder.append(entry.getValue());
+            builder.append("\"");
+            builder.append(",");
+        }
+        if (!stringStringMap.isEmpty()) {
+            builder.deleteCharAt(builder.length() - 1);
+        }
+        builder.append("}");
+        return builder;
+    }
+
     public static <T> T jsonToObject(StringBuilder data, Class<T> tClass)
             throws NoSuchFieldException, InvocationTargetException, InstantiationException, IllegalAccessException {
         String currentField = null;

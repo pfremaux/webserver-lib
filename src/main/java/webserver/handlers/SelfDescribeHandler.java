@@ -43,7 +43,7 @@ public class SelfDescribeHandler implements HttpHandler {
     }
     
     private void prepareHtmlDisplay(StringBuilder builder, DocumentedEndpoint doc) {
-    	if (doc.getHttpMethod().equalsIgnoreCase("GET")) {// TODO PFR handle @restricted    		
+    	if (doc.getHttpMethod().equalsIgnoreCase("GET")) {// TODO PFR handle @Role
     		builder.append("<h1>");
     		builder.append("<a href=\"");
     		builder.append(doc.getPath());
