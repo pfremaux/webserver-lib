@@ -31,8 +31,6 @@ import java.util.function.Function;
 public class AuthenticationHandler implements HttpHandler {
 
 
-	public static final Map<String, AuthenticationHandler.AccountInfo> MOCKED_CREDENTIAL = Map.of("admin", new AuthenticationHandler.AccountInfo("admin", "admin", List.of("admin")));
-
 	public static final BiFunction<String, String, AuthenticationResult> MOCKED_AUTH = (String login,
 			String password) -> {
 		if ("admin".equals(login) && "admin".equals(password)) {
@@ -43,9 +41,8 @@ public class AuthenticationHandler implements HttpHandler {
 
 	public static final Function<String, String> MOCKED_PASSWORD_ENCRYPTER =  Function.identity();
 	
-	public static final String MSG_FAILED_TO_LOGIN = "{\"msg\":\"failed to login\"}";
+	public static final String MSG_FAILED_TO_LOGIN = "{\"msg\":\"failed to login\"}";// TODO PFR use json response when errors
 	private final TokenStructure tokenStructure = new TokenStructure(DefaultTokenFields.values());
-	private final Map<String, AccountInfo> loginsToAccountInfo;
 	private final BiFunction<String, String, AuthenticationResult> authenticationValidator;
 	private final Function<String, String> passwordEncrypter;
 
@@ -57,13 +54,9 @@ public class AuthenticationHandler implements HttpHandler {
 	public record AccountInfo(String login, String password, List<String> roles) {
 	}
 
-	public AuthenticationHandler(Map<String, AccountInfo> loginsToAccountInfo,
+	public AuthenticationHandler(
 			BiFunction<String, String, AuthenticationResult> authenticationValidator,
 			Function<String, String> passwordEncrypter) {
-		this.loginsToAccountInfo = loginsToAccountInfo;
-		if (loginsToAccountInfo == MOCKED_CREDENTIAL) {
-			LogUtils.info("Using mocked credential: " + MOCKED_CREDENTIAL);
-		}
 		this.authenticationValidator = authenticationValidator;
 		this.passwordEncrypter = passwordEncrypter;
 
@@ -83,6 +76,14 @@ public class AuthenticationHandler implements HttpHandler {
 			exchange.getResponseHeaders().add("Content-Type", "text/json");
 			exchange.sendResponseHeaders(400, 0);
 			exchange.getResponseBody().write(new byte[]{});
+			exchange.getResponseBody().close();
+			return;
+		}
+		if(jsonData == null) {
+			final String errorMsg = "Missing body";
+			exchange.getResponseHeaders().add("Content-Type", "text/json");
+			exchange.sendResponseHeaders(400, errorMsg.length());
+			exchange.getResponseBody().write(errorMsg.getBytes(StandardCharsets.UTF_8));
 			exchange.getResponseBody().close();
 			return;
 		}

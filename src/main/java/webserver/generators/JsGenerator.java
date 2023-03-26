@@ -10,16 +10,19 @@ public class JsGenerator {
 		return """
 				let ACCOUNT = undefined;
 				
-				function asyncCall(method, data, fn) {
+				function asyncCall(method, path, data, fn) {
 					let xhttp = new XMLHttpRequest();
-					//xhttp.setRequestHeader(header, value);
+					
 					xhttp.onreadystatechange = function() {
 						if (this.readyState == 4 && this.status == 200) {
 							fn(this.responseText);
-							xhttp.open(method, path, true);
+							
 						}
 					};
-					xhttp.send();
+					xhttp.open(method, path, true);
+					//xhttp.setRequestHeader(header, value);
+					xhttp.setRequestHeader("Content-type", "text/json");
+					xhttp.send(JSON.stringify(data));
 				}
 				""";
 	}
@@ -39,7 +42,9 @@ public class JsGenerator {
 		builder.append(") {\n");
 		builder.append("\tasyncCall(\"");
 		builder.append(info.getHttpMethod());
-		builder.append("\", ");
+		builder.append("\", '");
+		builder.append(info.getPath());
+		builder.append("', ");
 		builder.append("{");
 		groupInputFieldToObjects(builder, info);
 		builder.append("}");

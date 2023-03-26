@@ -10,6 +10,7 @@ import webserver.generators.DocumentedEndpoint;
 import webserver.generators.EndpointGenerator;
 import webserver.generators.JsGenerator;
 import webserver.handlers.SelfDescribeHandler;
+import webserver.handlers.ServeFileHandler;
 import webserver.handlers.auth.AuthenticationHandler;
 import webserver.handlers.auth.DefaultTokenFields;
 import webserver.handlers.auth.TokenStructure;
@@ -19,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Parameter;
 import java.net.InetSocketAddress;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -91,23 +93,33 @@ public class EntryPoint {
                 List.of(endpointsDocs::add,
                         doc -> jsScript.append(JsGenerator.generateJsCall(doc)),
                         doc -> LogUtils.info("Loaded endpoint {0} {1}", doc.getHttpMethod(), doc.getPath())));
-        final String jsSourceCode = jsScript.toString();
-        LogUtils.info("Initializing self describer endpoint...");
-        handlers.put("/", new SelfDescribeHandler(endpointsDocs));
+
+
         LogUtils.info("Initializing auth endpoint...");
 
         handlers.put("/auth", new AuthenticationHandler(
-                AuthenticationHandler.MOCKED_CREDENTIAL,
                 AuthenticationHandler.MOCKED_AUTH,
                 AuthenticationHandler.MOCKED_PASSWORD_ENCRYPTER
         ));
+        final DocumentedEndpoint authEndpointDoc = new DocumentedEndpoint("auth", "POST", "/auth", "Authenticate the caller.", "{ login:'login', pass:'pass'}", "{ token: 'token' }}", Map.of("login", "String", "pass", "String"), null);
+        endpointsDocs.add(authEndpointDoc);
+        jsScript.append(JsGenerator.generateJsCall(authEndpointDoc));
+
         LogUtils.info("Initializing Javascript library...");
-        handlers.put("/fds.js", httpExchange -> {
+        final String jsSourceCode = jsScript.toString();
+        handlers.put("/server-lib.js", httpExchange -> {
             httpExchange.sendResponseHeaders(200, jsSourceCode.length());
             final OutputStream os = httpExchange.getResponseBody();
             os.write(jsSourceCode.getBytes());
             os.close();
         });
+
+        LogUtils.info("Initializing static files handler...");
+        handlers.put("/static", new ServeFileHandler(List.of()));// TODO PFR refactor constructor
+        endpointsDocs.add(new DocumentedEndpoint("downloadAsync", "GET", "/static/*", "Return static files", "", "<requested file data>", Map.of(), null));
+
+        LogUtils.info("Initializing self describer endpoint...");
+        handlers.put("/", new SelfDescribeHandler(endpointsDocs));
         boolean initTls = storePassKey != null;
         final HttpServer server;
         if (initTls) {

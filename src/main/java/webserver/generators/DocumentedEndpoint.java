@@ -5,79 +5,93 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DocumentedEndpoint {
-	private String javaMethodName;
-	private String httpMethod;
-	private String path;
-	private String description;
-	private String bodyExample;
-	private String responseExample;
-	private Map<String, String> parameters = new HashMap<>();
-	private Parameter returnType = null;
+    private String javaMethodName;
+    private String httpMethod;
+    private String path;
+    private String description;
+    private String bodyExample;
+    private String responseExample;
+    private Map<String, String> parameters = new HashMap<>();
+    private Parameter returnType = null;
 
-	public String getHttpMethod() {
-		return httpMethod;
-	}
+    public DocumentedEndpoint() {
 
-	public String getPath() {
-		return path;
-	}
+    }
+    public DocumentedEndpoint(String javaMethodName, String httpMethod, String path, String description, String bodyExample, String responseExample, Map<String, String> parameters, Parameter returnType) {
+        this.javaMethodName = javaMethodName;
+        this.httpMethod = httpMethod;
+        this.path = path;
+        this.description = description;
+        this.bodyExample = bodyExample;
+        this.responseExample = responseExample;
+        this.parameters = parameters;
+        this.returnType = returnType;
+    }
 
-	public String getDescription() {
-		return description;
-	}
 
-	public String getResponseExample() {
-		return responseExample;
-	}
+    public String getHttpMethod() {
+        return httpMethod;
+    }
 
-	public String getBodyExample() {
-		return bodyExample;
-	}
+    public String getPath() {
+        return path;
+    }
 
-	public void setHttpMethod(String method) {
-		this.httpMethod = method;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public void setPath(String path) {
-		this.path = path;
-	}
+    public String getResponseExample() {
+        return responseExample;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public String getBodyExample() {
+        return bodyExample;
+    }
 
-	public void setBodyExample(String bodyExample) {
-		this.bodyExample = bodyExample;
-	}
+    public void setHttpMethod(String method) {
+        this.httpMethod = method;
+    }
 
-	public void setResponseExample(String responseExample) {
-		this.responseExample = responseExample;
-	}
+    public void setPath(String path) {
+        this.path = path;
+    }
 
-	public Map<String, String> getParameters() {
-		return parameters;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public void setParameters(Map<String, String> parameters) {
-		this.parameters = parameters;
-	}
+    public void setBodyExample(String bodyExample) {
+        this.bodyExample = bodyExample;
+    }
 
-	public Parameter getReturnType() {
-		return returnType;
-	}
+    public void setResponseExample(String responseExample) {
+        this.responseExample = responseExample;
+    }
 
-	public void setReturnType(Parameter returnType) {
-		this.returnType = returnType;
-	}
+    public Map<String, String> getParameters() {
+        return parameters;
+    }
 
-	public String getJavaMethodName() {
-		return javaMethodName;
-	}
+    public void setParameters(Map<String, String> parameters) {
+        this.parameters = parameters;
+    }
 
-	public void setJavaMethodName(String javaMethodName) {
-		this.javaMethodName = javaMethodName;
-	}
+    public Parameter getReturnType() {
+        return returnType;
+    }
 
-	
-	
+    public void setReturnType(Parameter returnType) {
+        this.returnType = returnType;
+    }
+
+    public String getJavaMethodName() {
+        return javaMethodName;
+    }
+
+    public void setJavaMethodName(String javaMethodName) {
+        this.javaMethodName = javaMethodName;
+    }
+
+
 }
