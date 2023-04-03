@@ -1,0 +1,40 @@
+.panel-right {
+	position: absolute;
+	right:0px;
+	top: 0px;
+	bottom: 0px;
+	background-color: #777777;
+}
+
+.button-right {
+	position: absolute;
+	right:0px;
+}
+
+.panel-form label {
+	display: block;
+}
+.panel-form input {
+	display: inline-block;
+}
+.panel-form button {
+	display: inline-block;
+}
+.panel-form textarea {
+	display: block;
+}
+
+.panel-left {
+	position: absolute;
+	left:0px;
+	top: 0px;
+	bottom: 0px;
+	background-color: #777777;
+}
+
+.hide-btn {
+	position: absolute;
+	left:0px;
+	top: 0px;
+	z-index: 999;
+}

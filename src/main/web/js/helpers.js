@@ -41,7 +41,7 @@ function show(o) {
 	o.style.display = "inline";
 }
 
-function toggle() {
+function toggle(o) {
 	if (typeof o === "string") {
 		if (id(o).style.display === "inline") {
 			id(o).style.display = "none";
@@ -49,10 +49,10 @@ function toggle() {
 			id(o).style.display = "inline";
 		}
 	}
-	if (o.style.display === "inline") {
-		o.style.display === "none"
+	if (o.style.display !== "none") {
+		o.style.display = "none";
 	} else {
-		o.style.display = "inline"
+		o.style.display = "inline";
 	}
 }
 

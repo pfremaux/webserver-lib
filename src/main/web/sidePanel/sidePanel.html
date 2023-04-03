@@ -1,0 +1,137 @@
+<html>
+<head>
+	<link rel="stylesheet" href="sidePanel.css">
+	<script src="../js/helpers.js"></script>
+	<script src="../js/formCreator.js"></script>
+	<script src="../js/sidePanel.js"></script>
+<script src="globalSettings.js"></script>
+
+</head>
+<body>
+	
+	
+	
+	<script src="sidePanel.js"></script>
+		<script>
+var canvas = document.createElement('canvas');
+canvas.width = CANVA_WIDTH;
+canvas.height = CANVA_HEIGHT;
+document.body.appendChild(canvas);
+var ctx = canvas.getContext('2d');
+let workingImage = null;
+let firstFrameInfo = {
+	x:0,
+	y:0,
+	width:0,
+	height:0,
+	//isSet:()=> firstFrameInfo.x > 0 && 
+};
+			
+		
+function generateSetting() {
+	let outputDiv = id("dataId");
+	let data = {};
+	data["directoryInput"] = id("directoryInput").value;
+	data["fileInput"] = id("fileInput").value;
+	data["groupId"] = id("groupId").value;
+	data["typeId"] = id("typeId").value;
+	data["spreedsheetSprite"] = {};
+	if (id("isSpreedsheetId").checked) {
+		data["spreedsheetSprite"]["spreedsheetFirstFrameX"] = id("spreedsheetFirstFrameXId").value;
+		data["spreedsheetSprite"]["spreedsheetFirstFrameY"] = id("spreedsheetFirstFrameYId").value;
+		data["spreedsheetSprite"]["spreedsheetFrameHeight"] = id("spreedsheetFrameHeightId").value;
+		data["spreedsheetSprite"]["spreedsheetFrameWidth"] = id("spreedsheetFrameWidthId").value;
+	}
+
+	outputDiv.innerHTML = JSON.stringify(data);
+}
+
+function refreshCanva() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	if (workingImage) {
+		console.log('OOOKKK');
+		firstFrameInfo.x = id('spreedsheetFirstFrameXId').value;
+		firstFrameInfo.y = id('spreedsheetFirstFrameYId').value;
+		firstFrameInfo.width = id('spreedsheetFrameWidthId').value;
+		firstFrameInfo.height = id('spreedsheetFrameHeightId').value;
+		ctx.drawImage(workingImage, 0, 0);
+		ctx.beginPath();
+		ctx.moveTo(firstFrameInfo.x, firstFrameInfo.y);
+		ctx.lineTo(firstFrameInfo.x+firstFrameInfo.width, firstFrameInfo.y);// TODO PFR ces movements sont peut être relatifs...
+		ctx.stroke();
+		ctx.lineTo(firstFrameInfo.x+firstFrameInfo.width, firstFrameInfo.y+firstFrameInfo.height);
+		ctx.stroke();
+		ctx.lineTo(firstFrameInfo.x, firstFrameInfo.y+firstFrameInfo.height);
+		ctx.stroke();
+		ctx.lineTo(firstFrameInfo.x, firstFrameInfo.y);
+		ctx.stroke();
+	}
+}
+
+function toBeDefined(panelMainDiv) {
+	let directoryLabel = new Element('label').withText('Directory:').withId('directoryLabel');
+	let directoryInput = new Element('input').forId('directoryLabel').withId('directoryInput');
+	let fileLabel = new Element('label').withText('File:').withId('fileLabel');
+	let fileInput = new Element('input').forId('fileLabel').withId('fileInput');
+	directoryInput.get().value = '.\\';
+	fileInput.get().value = 'man-walk-cycle-vectors.jpg';
+	panelMainDiv.appendChild(directoryLabel.get());
+	panelMainDiv.appendChild(directoryInput.get());
+	panelMainDiv.appendChild(fileLabel.get());
+	panelMainDiv.appendChild(fileInput.get());
+
+	panelMainDiv.appendChild(new Element('button').withText('load').onClick(e=> {
+		workingImage = new Image();
+		workingImage.src = id('directoryInput').value+'\\'+id('fileInput').value;
+		workingImage.onload=()=> {
+			ctx.drawImage(workingImage, 0, 0);
+		};
+	}).get());
+
+	panelMainDiv.appendChild(new Element('label').withText('Group:').forId('groupId').get());
+	panelMainDiv.appendChild(new Element('input').withId('groupId').get());
+
+	let spreedsheetDiv = el('div');
+	hide(spreedsheetDiv);
+
+	spreedsheetDiv.appendChild(new Element('label').withText('X:').forId('spreedsheetFirstFrameXId').get());
+	spreedsheetDiv.appendChild(new Element('input').onChange(e=> refreshCanva()).withId('spreedsheetFirstFrameXId').get());
+	spreedsheetDiv.appendChild(new Element('label').withText('Y:').forId('spreedsheetFirstFrameYId').get());
+	spreedsheetDiv.appendChild(new Element('input').onChange(e=> refreshCanva()).withId('spreedsheetFirstFrameYId').get());
+
+	spreedsheetDiv.appendChild(new Element('label').withText('Height:').forId('spreedsheetFrameHeightId').get());
+	spreedsheetDiv.appendChild(new Element('input').onChange(e=> refreshCanva()).withId('spreedsheetFrameHeightId').get());
+	spreedsheetDiv.appendChild(new Element('label').withText('Width:').forId('spreedsheetFrameWidthId').get());
+	spreedsheetDiv.appendChild(new Element('input').onChange(e=> refreshCanva()).withId('spreedsheetFrameWidthId').get());
+
+	let types = new InputForm('typeId', {
+		label:"Type: ",
+		type:"combo",
+		allowedValues: "Item;Obstacle;Scene"
+	});
+	types.insertIn(panelMainDiv);
+	//panelMainDiv.appendChild(new Element('input').withId('typeId').withPossibleValues(types).get());
+
+	let isSpreedsheetBox = new el('input');
+	isSpreedsheetBox.id = 'isSpreedsheetId';
+	isSpreedsheetBox.type = 'checkbox';
+
+	isSpreedsheetBox.onclick = e => {
+		toggle(spreedsheetDiv);
+	};
+
+	panelMainDiv.appendChild(new Element('label').withText('Is spreedsheet ?').forId('isSpreedsheetId').get());
+	panelMainDiv.appendChild(isSpreedsheetBox);
+	panelMainDiv.appendChild(spreedsheetDiv);
+
+	panelMainDiv.appendChild(new Element('label').withText('Output:').forId('dataId').get());
+	panelMainDiv.appendChild(new Element('textarea').withId("dataId").get());
+	panelMainDiv.appendChild(new Element('button').withText('Gen. setting').onClick(e=>generateSetting()).withId("gen").get());
+}
+
+let panelMainDiv = installSideMenu();
+toBeDefined(panelMainDiv);
+		
+		</script>
+</body>
+</html>

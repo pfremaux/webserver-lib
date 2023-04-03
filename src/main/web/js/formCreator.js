@@ -16,6 +16,10 @@ function Element(tagName) {
 		this.element.addEventListener("click", evtFun);
 		return this;
 	};
+	this.onChange = function(evtFun) {
+        this.element.addEventListener("change", evtFun);
+        return this;
+    };
 	this.forId = function(ident) {
 		this.element.htmlFor = ident;
 		return this;
