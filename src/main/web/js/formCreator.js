@@ -17,16 +17,17 @@ function Element(tagName) {
 		return this;
 	};
 	this.onChange = function(evtFun) {
-        this.element.addEventListener("change", evtFun);
-        return this;
-    };
+		this.element.addEventListener("change", evtFun);
+		return this;
+	};
 	this.forId = function(ident) {
 		this.element.htmlFor = ident;
 		return this;
 	};
 	this.withPossibleValues = function(options) {
-		if (this.element.type !== "select") {
+		if (this.element.type !== "select-one") {
 			// TODO ERROR
+			console.log("ERROR expected select type, but got " + this.element.type);
 		}
 		let actions = {};
 		options.forEach(e => {
@@ -63,7 +64,11 @@ function InputForm(ident, data) {
 	if (data.type === 'combo') {
 		let options = [];
 		if (typeof data.allowedValues === "string") {
-			options = data.allowedValues.split(";");
+			let strOptions = data.allowedValues.split(";");
+			for (let str in strOptions) {
+				options.push({ value: strOptions[str], text:strOptions[str], change:e=>{} });
+			}
+			
 		}else {
 			options =  data.allowedValues;
 		}
@@ -96,6 +101,14 @@ function InputForm(ident, data) {
 			return obj;
 		});
 	}
+	this.withValue = function(v) {
+		this.elements[1].value = v;
+		return this;
+	};
+	this.disabled = function() {
+		this.elements[1].disabled=true;
+		return this;
+	};
 	this.insertIn = function(parent) {
 		let br = el('br');
 		for (let i = 0 ; i < this.elements.length ; i++) {
