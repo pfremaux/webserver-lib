@@ -6,12 +6,13 @@ import tools.JsonMapper;
 import tools.LogUtils;
 import tools.MdDoc;
 import tools.security.SimpleSecretHandler;
-import tools.security.SyncedConfig;
+import tools.security.Singletons;
 import webserver.annotations.Endpoint;
 import webserver.annotations.Role;
-import webserver.handlers.auth.DefaultTokenFields;
-import webserver.handlers.auth.Token;
-import webserver.handlers.auth.TokenStructure;
+import webserver.handlers.HandlerUtils;
+import webserver.handlers.web.auth.DefaultTokenFields;
+import webserver.handlers.web.auth.Token;
+import webserver.handlers.web.auth.TokenStructure;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -66,6 +67,7 @@ public class EndpointGenerator {
             documentedEndpoint.setJavaMethodName(declaredMethod.getName());
             documentedEndpoint.setHttpMethod(method);
             documentedEndpoint.setPath(path);
+            documentedEndpoint.setRole(requiredRole == null ? null : requiredRole.value());
             try {
                 documentedEndpoint.setBodyExample(JsonMapper.objectToJsonExample(bodyParameter.getType()).toString());
                 documentedEndpoint.setResponseExample(JsonMapper.objectToJsonExample(declaredMethod.getReturnType()).toString());
@@ -93,11 +95,11 @@ public class EndpointGenerator {
 
                     }
                     String token = secValues.get(0);
-                    SimpleSecretHandler secretHandler = SyncedConfig.get(SimpleSecretHandler.class);
+                    SimpleSecretHandler secretHandler = Singletons.get(SimpleSecretHandler.class);
                     try {
                         LogUtils.info("deciphering token...");
                         final String decrypt = secretHandler.decrypt(Base64.getDecoder().decode(token));
-                        final TokenStructure tokenStructure = SyncedConfig.get(TokenStructure.class);
+                        final TokenStructure tokenStructure = Singletons.get(TokenStructure.class);
                         final Token token1 = tokenStructure.parseAndStoreTokenDeciphered(decrypt);
                         final String userId = token1.get(DefaultTokenFields.USER_ID);
                         LogUtils.info("userId = " + userId);
@@ -108,13 +110,7 @@ public class EndpointGenerator {
                     }
 
                 }
-                if (!exchange.getRequestMethod().equals(method)) {
-                    final String msg = "Method not allowed";
-                    exchange.sendResponseHeaders(409, msg.length());
-                    final OutputStream os = exchange.getResponseBody();
-                    os.write(msg.getBytes());
-                    os.close();
-                    exchange.getResponseBody().close();
+                if (HandlerUtils.validateHttpRequest(exchange, method)) {
                     return;
                 }
 
@@ -130,7 +126,6 @@ public class EndpointGenerator {
                     handleException(exchange, e);
                     return;
                 }
-
 
                 final String responseText = result == null ? "{}" : JsonMapper.objectToJson(result).toString();
                 exchange.sendResponseHeaders(200, responseText.length());

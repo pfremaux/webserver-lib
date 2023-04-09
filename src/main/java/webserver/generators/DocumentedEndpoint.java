@@ -11,16 +11,18 @@ public class DocumentedEndpoint {
     private String description;
     private String bodyExample;
     private String responseExample;
+    private String role;
     private Map<String, String> parameters = new HashMap<>();
     private Parameter returnType = null;
 
     public DocumentedEndpoint() {
 
     }
-    public DocumentedEndpoint(String javaMethodName, String httpMethod, String path, String description, String bodyExample, String responseExample, Map<String, String> parameters, Parameter returnType) {
+    public DocumentedEndpoint(String role, String javaMethodName, String httpMethod, String path, String description, String bodyExample, String responseExample, Map<String, String> parameters, Parameter returnType) {
         this.javaMethodName = javaMethodName;
         this.httpMethod = httpMethod;
         this.path = path;
+        this.role = role;
         this.description = description;
         this.bodyExample = bodyExample;
         this.responseExample = responseExample;
@@ -94,4 +96,11 @@ public class DocumentedEndpoint {
     }
 
 
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getRole() {
+        return role;
+    }
 }

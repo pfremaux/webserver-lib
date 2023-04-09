@@ -16,7 +16,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.LinkedList;
 
 public class PublicKeyHandler extends AsymmetricKeyHandler<PublicKey> {
-    private static final Logger logger = LogUtils.initLogs();
 
     public void save(String path, PublicKey publicKey) throws IOException {
         LogUtils.debug("Saving public key in {}", path);
@@ -64,7 +63,7 @@ public class PublicKeyHandler extends AsymmetricKeyHandler<PublicKey> {
         final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         while (inputStream.available() > 0) {
-            logger.fine(String.format("[encrypting] %d remaining byte(s) to process.", inputStream.available()));
+            LogUtils.debug(String.format("[encrypting] %d remaining byte(s) to process.", inputStream.available()));
             final int sizeToRead = Math.min(inputStream.available(), 245);
             try (CipherOutputStream cipherOutputStream = new CipherOutputStream(byteArrayOutputStream, cipher)) {
                 byte[] array = new byte[sizeToRead];

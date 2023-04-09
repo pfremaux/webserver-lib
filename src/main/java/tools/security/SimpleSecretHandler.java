@@ -30,11 +30,11 @@ public class SimpleSecretHandler {
 
     public enum Type {SYMMETRIC, ASYMMETRIC}
 
-    public SimpleSecretHandler(String password) {
+    public SimpleSecretHandler(char[]  password) {
         this.privateKeyHandler = null;
         this.publicKeyHandler = null;
         this.type = Type.SYMMETRIC;
-        this.secretKey = SymmetricHandler.getKey(password, SymmetricHandler.DEFAULT_SYMMETRIC_ALGO);
+        this.secretKey = SymmetricHandler.getKey(new String(password), SymmetricHandler.DEFAULT_SYMMETRIC_ALGO);
         this.publicKey = null;
         this.privateKey = null;
     }

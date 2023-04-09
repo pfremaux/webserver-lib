@@ -2,7 +2,7 @@ package tools.security;
 
 import java.util.*;
 
-public class SyncedConfig {
+public class Singletons {
     public interface Config {
         boolean isNumerical();
     }
@@ -35,21 +35,5 @@ public class SyncedConfig {
         return (T) singletons.get(c);
     }
 
-
-    public static Config register(String key, int value) {
-        return settings.put(key, new NumericConfig(key, value));
-    }
-
-    public static Config register(String key, String value) {
-        return settings.put(key, new StringConfig(key, value));
-    }
-
-    public static Optional<Config> getConfig(String key) {
-        return Optional.ofNullable(settings.get(key));
-    }
-
-    public static Config requireConfig(String key) {
-        return Objects.requireNonNull(settings.get(key));
-    }
 
 }

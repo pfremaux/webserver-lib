@@ -1,4 +1,4 @@
-package webserver.handlers;
+package webserver.handlers.web;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 
 public class SelfDescribeHandler implements HttpHandler {
 
-    private static final Logger logger = LogUtils.initLogs();
     private String strContexts;
 
     public SelfDescribeHandler(HttpContext[] contexts) {
@@ -43,34 +42,30 @@ public class SelfDescribeHandler implements HttpHandler {
     }
     
     private void prepareHtmlDisplay(StringBuilder builder, DocumentedEndpoint doc) {
-    	if (doc.getHttpMethod().equalsIgnoreCase("GET")) {// TODO PFR handle @Role
+    	if (doc.getHttpMethod().equalsIgnoreCase("GET")) {
     		builder.append("<h1>");
     		builder.append("<a href=\"");
     		builder.append(doc.getPath());
     		builder.append("\">");
+
             builder.append(doc.getHttpMethod());
             builder.append(" ");
             builder.append(doc.getPath());
             builder.append("</a>");
             builder.append("</h1>");
-            builder.append("<p>");
-            builder.append(doc.getDescription());
-            builder.append("</p>");
-            builder.append("<p>");
-            builder.append(doc.getBodyExample());
-            builder.append("</p>");
-            builder.append("<p>");
-            builder.append(doc.getResponseExample());
-            builder.append("</p>");
-            builder.append("<br/>");
-            
-    		return;
-    	}
-    	builder.append("<h1>");
-        builder.append(doc.getHttpMethod());
-        builder.append(" ");
-        builder.append(doc.getPath());
-        builder.append("</h1>");
+    	} else {
+            builder.append("<h1>");
+            builder.append(doc.getHttpMethod());
+            builder.append(" ");
+            builder.append(doc.getPath());
+            builder.append("</h1>");
+        }
+
+        if (doc.getRole() != null) {
+            builder.append("<h3>Requires role: ");
+            builder.append(doc.getRole());
+            builder.append("</h3>");
+        }
         builder.append("<p>");
         builder.append(doc.getDescription());
         builder.append("</p>");
@@ -86,7 +81,6 @@ public class SelfDescribeHandler implements HttpHandler {
 
 	@Override
     public void handle(HttpExchange exchange) throws IOException {
-        logger.warning("Self describe");
         exchange.sendResponseHeaders(200, strContexts.length());
         final OutputStream os = exchange.getResponseBody();
         os.write(strContexts.getBytes());

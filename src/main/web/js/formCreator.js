@@ -45,11 +45,12 @@ function Element(tagName) {
 			//log(e);
 		});
 		return this;
-	}; 
+	};
 	this.get = function() {
 		return this.element;
 	};
 }
+
 
 function InputForm(ident, data) {
 	this.elements = [];

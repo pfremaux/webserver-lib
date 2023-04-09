@@ -1,4 +1,4 @@
-package webserver.handlers.auth;
+package webserver.handlers.web.auth;
 
 import webserver.annotations.JsonField;
 

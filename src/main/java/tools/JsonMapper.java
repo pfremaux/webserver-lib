@@ -176,8 +176,7 @@ public class JsonMapper {
             }
             // tClass.getDeclaredConstructors()[0].newInstance();
         }
-        return null;// TODO PFR if inside an array cette method est appelée pour un element de
-        // l'array
+        return null;
     }
 
     private final static int findClosingCharacter(StringBuilder builder, int fromIndex) {
@@ -240,9 +239,10 @@ public class JsonMapper {
                 if (genericReturnType instanceof ParameterizedType) {
                     final ParameterizedType paramType = (ParameterizedType) genericReturnType;
                     Type[] argTypes = paramType.getActualTypeArguments();
+                    /*If an unsupported type is passed, it would be good to log it here
                     if (argTypes.length > 0) {
                         System.out.println("Generic type is " + argTypes[0]);
-                    }
+                    }*/
                     String typeName = argTypes[0].getTypeName();
                     String simpleNameGeneric = typeName.substring(typeName.lastIndexOf(".") + 1);
                     if (BASE_TYPES.contains(simpleNameGeneric)) {

@@ -27,6 +27,19 @@ public class JsGenerator {
 				""";
 	}
 
+	public static String authSource() {// TODO PFR bien commenter pour dire que ce code est dependant du code genere
+		return """
+				function auth(login, pass, fn) {
+					_auth(login, pass, obj => {
+						ACCOUNT = {
+							token: obj.token
+						};
+						return fn(obj);
+					});
+				}
+				""";
+	}
+
 	public static StringBuilder generateJsCall(DocumentedEndpoint info) {
 		final StringBuilder builder = new StringBuilder();
 		final String methodName = info.getJavaMethodName();

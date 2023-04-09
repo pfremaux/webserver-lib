@@ -1,4 +1,4 @@
-package webserver.handlers.auth;
+package webserver.handlers.web.auth;
 
 public enum DefaultTokenFields implements TokenField {
     VERSION("version", 3),
