@@ -12,6 +12,7 @@ public class LogUtils {
     //private static final String DEFAULT_FORMAT = "[%1$tF %1$tT] [%2$-7s] %3$s %n";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withLocale(Locale.CANADA_FRENCH);
     private static final ZoneId ZONE_ID = ZoneId.of("America/Montreal"); // TODO PFR parameterize
+    public static final String WEBSERVER_LIB = "webserver-lib";
     private static Logger logger = initLogs();
 
     private LogUtils() {
@@ -46,15 +47,15 @@ public class LogUtils {
         AppInfo appInfo = new AppInfo();
         // TODO PFR merge code in common between those 2 calls
         if (appInfo.isInIde()) {
-            return initIdeLogs(appInfo);
+            return initIdeLogs(WEBSERVER_LIB);
         } else {
-            return initLogsForBinaryApp(appInfo);
+            return initLogsForBinaryApp(WEBSERVER_LIB);
         }
     }
 
-    private static Logger initIdeLogs(AppInfo appInfo) {
+    private static Logger initIdeLogs(String appName) {
         if (logger == null) {
-            logger = Logger.getLogger(appInfo.getAppName());
+            logger = Logger.getLogger(appName);
             ConsoleHandler handler = new ConsoleHandler();
 
             // VERY IMPORTANT otherwise we will have logs twice (with a default handler)
@@ -84,12 +85,12 @@ public class LogUtils {
         };
     }
 
-    private static Logger initLogsForBinaryApp(AppInfo appInfo) {
+    private static Logger initLogsForBinaryApp(String appName) {
         if (logger == null) {
-            logger = Logger.getLogger(appInfo.getAppName());
+            logger = Logger.getLogger(appName);
             FileHandler fh = null;
             try {
-                fh = new FileHandler(appInfo.getAppName() + "-logs.log", 100, 10);
+                fh = new FileHandler(appName + "-logs.log", 100, 10);
                 fh.setFormatter(getNewInstanceFormatter());
                 fh.setLevel(Level.FINE);
                 // VERY IMPORTANT otherwise we will have logs twice (with a default handler)

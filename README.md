@@ -2,7 +2,8 @@
 ## Description
 The goal of this project is to provide a light java webserver, with an easy way to create new endpoints.
 This server is light because it's mostly using what the JDK already provides, and the way to create endpoint is like what some other framework are proposing: annotations.
-I made this project because of some projects do at home and I wanted to have a "toolbox" with what I commonly need.
+I made this project because of some projects I'm creating at home and I wanted to have a "toolbox" with what I commonly need.
+I found the design principle KISS (Keep It Simple Stupid) was a good approach here.
 
 ## Security and privacy
 It's quite trivial but largely enough for a project at home: 
@@ -11,12 +12,13 @@ It's quite trivial but largely enough for a project at home:
 
 ## Installation
 ### From sources
-The jar is not stored in repositories. So you'll need to manually paste the jar in a valid dependency path.
+The jar is not stored in a repository (this project doesn't require any dependency, just a JDK). 
+So you'll need to manually paste the jar in a valid dependency path.
 - checkout the right branch (each version should have a branch).
 - run `build.bat` or `build.sh`.
 - you should get `weberserver-lib.jar` and `server-config.properties`.
 - put the jar in your project's libs directory and server-config.properties in your resources directory.
-- read the documenation.
+- read the documetation.
 
 ## Examples
 ### Declare a new endpoint

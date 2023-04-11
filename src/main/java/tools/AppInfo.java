@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+@Deprecated
 public class AppInfo {
 
     private final ResourceBundle bundle;

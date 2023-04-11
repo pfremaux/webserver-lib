@@ -1,7 +1,7 @@
 package webserver.example;
 
 import tools.MdDoc;
-import tools.security.Singletons;
+import tools.Singletons;
 import webserver.annotations.Endpoint;
 import webserver.annotations.Role;
 

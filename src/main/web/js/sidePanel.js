@@ -2,13 +2,13 @@ function installSideMenu() {
 	let panelMainGlobalDiv = el('div');
 	let panelMainDiv = el('div');
 	panelMainGlobalDiv.appendChild(panelMainDiv);
-	panelMainGlobalDiv.className = 'panel-right';
-	panelMainDiv.className = 'panel-form';
+	panelMainGlobalDiv.className = 'sp-panel-right';
+	panelMainDiv.className = 'sp-panel-form';
 	let changesideButton = el('button');
 	changesideButton.innerHTML = '<-->';
-	changesideButton.className = 'button-right';
+	changesideButton.className = 'sp-button-right';
 	changesideButton.onclick = e => { 
-		panelMainGlobalDiv.className = panelMainGlobalDiv.className === 'panel-right' ? 'panel-left' : 'panel-right';
+		panelMainGlobalDiv.className = panelMainGlobalDiv.className === 'sp-panel-right' ? 'sp-panel-left' : 'sp-panel-right';
 	}
 	panelMainDiv.appendChild(changesideButton);
 	let br = el('br');
@@ -16,7 +16,7 @@ function installSideMenu() {
 	
 	let hideButton = el('button');
 	hideButton.innerHTML = "hide/show";
-	hideButton.className = 'hide-btn';
+	hideButton.className = 'sp-hide-btn';
 	hideButton.onclick = e => toggle(panelMainGlobalDiv);
 	
 	document.body.appendChild(panelMainGlobalDiv);

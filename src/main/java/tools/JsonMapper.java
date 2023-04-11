@@ -14,8 +14,6 @@ public class JsonMapper {
 
     }
 
-
-
     public static StringBuilder fillWithJsonFormat(StringBuilder builder, Map<String, String> stringStringMap) {
         builder.append("{");
         for (Map.Entry<String, String> entry : stringStringMap.entrySet()) {
@@ -179,7 +177,7 @@ public class JsonMapper {
         return null;
     }
 
-    private final static int findClosingCharacter(StringBuilder builder, int fromIndex) {
+    private static int findClosingCharacter(StringBuilder builder, int fromIndex) {
         final char closingCharacter;
         final char openingCharacter = builder.charAt(fromIndex);
         if (openingCharacter == '{') {
@@ -218,7 +216,6 @@ public class JsonMapper {
             }
             if (declaredMethod.getName().equals("toto")) {
                 continue;
-
             }
             final String attributeName = declaredMethod.getName().substring(3).toLowerCase();
             if (!nameToField.contains(attributeName)) {
@@ -299,24 +296,12 @@ public class JsonMapper {
     }
 
     public static Map<String, String> objectToMapDescriptor(Class<?> object) {
-		/*final Map<String, String>  result = new HashMap<>();
-		for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
-			if (!declaredMethod.getName().startsWith("get")) {
-				continue;
-			}
-				final String name = declaredMethod.getName().substring(3, 4).toLowerCase()+declaredMethod.getName().substring(4);
-				final String simpleName = declaredMethod.getReturnType().getSimpleName();
-				result.put(name,  simpleName);
-			
-		}
-		return result;*/
         final Map<String, String> result = new HashMap<>();
+        // TODO PFR stream
         for (Field field : object.getDeclaredFields()) {
-
             final String name = field.getName();
             final String simpleName = field.getType().getSimpleName();
             result.put(name, simpleName);
-
         }
         return result;
     }

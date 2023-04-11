@@ -6,7 +6,7 @@ import tools.LogUtils;
 import tools.MdDoc;
 import tools.SystemUtils;
 import tools.security.SimpleSecretHandler;
-import tools.security.Singletons;
+import tools.Singletons;
 import webserver.ServerProperties;
 import webserver.generators.DocumentedEndpoint;
 import webserver.generators.EndpointGenerator;
@@ -35,7 +35,7 @@ public class ServerHandler {
 
     @MdDoc(description = "Main method you need to call in order to start the server")
     public static void runServer(
-            @MdDoc(description = "Command line parameters passed by the runner. It's necessary in case you added parameters in cliLoader.")
+            @MdDoc(description = "Command line parameters passed by the runner.")
             String[] args,
             @MdDoc(description = "This Set must contain all classes paths that have @Endpoint annotations. All method annotated will generate a endpoint this server will expose.")
             Set<String> classesPath,
@@ -44,6 +44,8 @@ public class ServerHandler {
         final Set<String> providedParameters = Stream.of(args).collect(Collectors.toSet());
         final CliParameterLoader cliLoader = getCliParameterLoader();
         final Map<String, String> parameters = cliLoader.load(args);
+        // We need to process the config file FIRST and the command line after as some command line
+        // might require some settings loaded in the config file.
         ConfigHandler.processConfigFile(providedParameters, parameters);
         ConfigHandler.processCommandLineParameters(classesPath, providedParameters, parameters);
 
@@ -52,6 +54,10 @@ public class ServerHandler {
         loadConfigAndStartWebServer(classesPath, ksPass, tokenPass, authenticationHandler);
     }
 
+    /**
+     * Returns an instance with all supported parameters the user could pass.
+     * @return CliParameterLoader.
+     */
     private static CliParameterLoader getCliParameterLoader() {
         return new CliParameterLoader(Map.of(), Map.of(//
                 "--ksPass", "The Java Key Store password. It's required if you passed a jks path.",//
@@ -59,7 +65,7 @@ public class ServerHandler {
                 ConfigHandler.GENERATE_PROPERTIES_PARAM, "Generate a default properties file", //
                 ConfigHandler.CONFIG_FILE, ".properties file to customize/enable functionalities." //
         ),
-                Map.of(/*fill with map when parameters are linked with each other and you want to create pairs of required fields*/));
+                Map.of(/*fill with map when parameters are linked with each other, and you want to create pairs of required fields*/));
     }
 
 
@@ -70,13 +76,16 @@ public class ServerHandler {
         Singletons.register(new SimpleSecretHandler(tokenPass));
         Singletons.register(new TokenStructure(DefaultTokenFields.values()));
 
+        // Instantiate each class that should contain @Endpoint
         final List<Object> instancesToProcess = new ArrayList<>();
+        // TODO stream
         for (String classPath : classesPath) {
             final Class<?> aClass = Class.forName(classPath);
             final Object newInstance = aClass.getConstructor().newInstance();
             instancesToProcess.add(newInstance);
         }
 
+        // Generate the documentation for each endpoint
         final List<DocumentedEndpoint> endpointsDocs = new ArrayList<>();
         final StringBuilder jsScript = new StringBuilder();
         jsScript.append(JsGenerator.asyncCallSource());
@@ -85,7 +94,7 @@ public class ServerHandler {
                         doc -> jsScript.append(JsGenerator.generateJsCall(doc)),
                         doc -> LogUtils.info("Documenting generated endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
 
-
+        // If an auth endpoint has been set up then register it.
         if (ServerProperties.KEY_AUTH_ENDPOINT.getValue().isPresent()) {
             LogUtils.info("Initializing auth endpoint...");
             final String relativePathEndpoint = ServerProperties.KEY_AUTH_ENDPOINT.getValue().get();
@@ -96,6 +105,7 @@ public class ServerHandler {
             jsScript.append(JsGenerator.authSource());
         }
 
+        // If a js library has been set up then generate a js method for each endpoint to call them.
         if (ServerProperties.KEY_GENERATE_JS_LIB_ENDPOINT.getValue().isPresent()) {
             LogUtils.info("Initializing Javascript library...");
             final String jsSourceCode = jsScript.toString();
@@ -108,26 +118,30 @@ public class ServerHandler {
             endpointsDocs.add(new DocumentedEndpoint(null, null, "GET", ServerProperties.KEY_GENERATE_JS_LIB_ENDPOINT.getValue().get(), "", "", "", Map.of(), null));
         }
 
+        // If an endpoint for shared static files, create it.
         if (ServerProperties.KEY_STATIC_FILES_ENDPOINT_RELATIVE_PATH.getValue().isPresent()) {
             LogUtils.info("Initializing static files handler...");
             handlers.put(ServerProperties.KEY_STATIC_FILES_ENDPOINT_RELATIVE_PATH.getValue().get(), new ServeFileHandler());
             endpointsDocs.add(new DocumentedEndpoint(null, "downloadAsync", "GET", ServerProperties.KEY_STATIC_FILES_ENDPOINT_RELATIVE_PATH.getValue().get() + "/*", "Return static files", "", "<requested file data>", Map.of(), null));
         }
 
+        // If an endpoint that describes all existing endpoint has been set up, then create it.
         if (ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().isPresent()) {
             LogUtils.info("Initializing self describer endpoint...");
             handlers.put(ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().get(), new SelfDescribeHandler(endpointsDocs));
         }
 
+        // Set up the HTTP server itself.
         final int port = ServerProperties.LISTENING_PORT.asInteger().orElse(8080);
         final int threadCount = ServerProperties.MAX_THREAD.asInteger().orElse(5);
 
+        // Create the server for serving HTTPS or HTTP depending on the settings.
         boolean initTls = storePassKey != null;
         final HttpServer server;
         if (initTls) {
             LogUtils.info("Initializing HTTP over TLS on port %d...", port);
             server = HttpsServer.create(new InetSocketAddress(port), 0);
-            final String keyStorePath = ServerProperties.KEY_STORE_PATH.getValue().orElse(null);//parameters.getOrDefault("--ksPath", "e:/dev/intellij/commons-lib/testkey.jks");
+            final String keyStorePath = ServerProperties.KEY_STORE_PATH.getValue().orElse(null);
             initSSL((HttpsServer) server, storePassKey, keyStorePath);
         } else {
             LogUtils.info("Initializing HTTP on port %d...", port);
@@ -136,12 +150,13 @@ public class ServerHandler {
 
         LogUtils.info("Create thread pool with a capacity of %d...", threadCount);
         server.setExecutor(Executors.newFixedThreadPool(threadCount));
+        // TODO PFR refactor to avoid useless toList()
         handlers.entrySet().stream()
                 .peek(entry -> LogUtils.info("Loading handler %s...", entry.getKey()))
                 .map(entry -> server.createContext(entry.getKey(), entry.getValue()))
                 .toList();
         server.start();
-        LogUtils.info("Accessible : %s://127.0.0.1:%d/\n", initTls ? "https" : "http", port);
+        LogUtils.info("Accessible : %s://127.0.0.1:%d\n"+ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().orElse(""), initTls ? "https" : "http", port);
     }
 
     /*

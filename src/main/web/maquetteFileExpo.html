@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="helpers.js"></script>
-<script src="formCreator.js"></script>
-<script src="sidePanel.js"></script>
-<script src="globalSettings.js"></script>
-<style>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="sidePanel.css">
+    <script src="js/helpers.js"></script>
+    <script src="js/formCreator.js"></script>
+    <script src="js/sidePanel.js"></script>
+    <style>
 
 .wrapper {
     display: grid;
 	grid-template-columns: 1fr 4fr 1fr;
+    grid-template-rows: 100px 100px;
+    grid-gap: 4px;
+}
+
+
+.wrapper-2 {
+    display: grid;
+	grid-template-columns: 8fr 1fr;
     grid-template-rows: 100px 100px;
     grid-gap: 4px;
 }
@@ -66,7 +75,8 @@
 	border-style: dotted;
 }
 
-</style>
+
+    </style>
 
 </head>
 <body>
@@ -79,15 +89,69 @@ function showMenu(idContainer) {
 	container.appendChild(link);
 }
 
+function DrawingState() {
+    this.buttonPress = false;
+    /*imgTag.addEventListener('keydown', (e) => {
+        this.buttonPress = true;
+    });
+    imgTag.addEventListener('keyup', (e) => {
+        this.buttonPress = false;
+    });*/
+    this.xDown = -1;
+    this.yDown = -1;
+    this.xUp = -1;
+    this.yUp = -1;
+    this.clear = function() {
+        this.xDown = -1;
+        this.yDown = -1;
+        this.xUp = -1;
+        this.yUp = -1;
+    };
+}
+
+
+
+function showEditFile(idContainer, filePath) {
+	removeAllChildren(idContainer);
+	hide('panel-left');
+	//hide('panel-right');
+
+	var canvas = el('canvas');
+    var largeur_canvas = 700;
+    var hauteur_canvas = 700;
+    canvas.width = largeur_canvas;
+    canvas.height = hauteur_canvas;
+    var ctx = canvas.getContext('2d');
+    var spriteSheet = new Image();
+    spriteSheet.src = filePath;
+    ctx.drawImage(spriteSheet, 0, 0, spriteSheet.width, spriteSheet.height);
+    let ds = new DrawingState();
+    /*document.addEventListener('mousedown', (e) => {
+        ds.xDown = e.pageX;
+        ds.yDown = e.pageY;
+        log('x down: '+ds.xDown);
+        log('y down: '+ds.yDown);
+    });
+    document.addEventListener('mouseup', (e) => {
+        ds.xUp = e.pageX;
+        ds.yUp = e.pageY;
+        log('x up: '+ds.xUp);
+        log('y up: '+ds.yUp);
+    });*/
+
+	let container = id(idContainer);
+	container.appendChild(canvas);
+    id('mainContainer').className = 'wrapper-2';
+}
+
 function showFiles(idContainer) {
 	let container = id(idContainer);
 	let itemsContainer = el('div');
 	itemsContainer.className = "file-container";
 	for(let i = 0 ; i < 6 ; i++) {	
-		let v = vignette('picto.png', 'file '+i, ["U", "D"], e=> log('click' + i));
+		let v = vignette('picto.png', 'file '+i, ["U", "D"], e=> showEditFile(idContainer, 'picto.png'));
 		itemsContainer.appendChild(v);
 	}
-	
 	container.appendChild(itemsContainer);
 }
 
@@ -151,28 +215,30 @@ function showContext(idContainer) {
 		.disabled()
 		.insertIn(container);
 }
+
 </script>
 
-<div class="wrapper">
-	<div id="panel-left">
-	</div>
-	<div id="panel-center">
-		<!--<div class="file-container">
-			<div class="vignette">
-				<div><img src="picto.png" class="vignette-img-min"/></div>
-				<div class="vignette-filename">filename1</div>
-				<div class="vignette-actions">O  X  Q</div>
-			</div>-->
-		</div>
-		<div id="panel-right">
-		</div>
-	</div>
+<div class="wrapper" id="mainContainer">
+    <div id="panel-left">
+    </div>
+    <div id="panel-center">
+        <!--<div class="file-container">
+            <div class="vignette">
+                <div><img src="picto.png" class="vignette-img-min"/></div>
+                <div class="vignette-filename">filename1</div>
+                <div class="vignette-actions">O  X  Q</div>
+            </div>-->
+    </div>
+    <div id="panel-right">
+    </div>
+</div>
 </div>
 
 <script>
 showMenu('panel-left');
 showFiles('panel-center');
 showContext('panel-right')
+
 </script>
 
 </body>

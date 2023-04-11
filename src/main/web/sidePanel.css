@@ -1,0 +1,40 @@
+.sp-panel-right {
+	position: absolute;
+	right:0px;
+	top: 0px;
+	bottom: 0px;
+	background-color: #777777;
+}
+
+.sp-button-right {
+	position: absolute;
+	right:0px;
+}
+
+.sp-panel-form label {
+	display: block;
+}
+.sp-panel-form input {
+	display: inline-block;
+}
+.sp-panel-form button {
+	display: inline-block;
+}
+.sp-panel-form textarea {
+	display: block;
+}
+
+.sp-panel-left {
+	position: absolute;
+	left:0px;
+	top: 0px;
+	bottom: 0px;
+	background-color: #777777;
+}
+
+.sp-hide-btn {
+	position: absolute;
+	left:0px;
+	top: 0px;
+	z-index: 999;
+}

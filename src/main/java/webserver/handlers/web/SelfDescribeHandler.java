@@ -11,9 +11,12 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.logging.Logger;
 
+/**
+ * The goal of this handler is to generate a HTML page that describes all endpoints.
+ */
 public class SelfDescribeHandler implements HttpHandler {
 
-    private String strContexts;
+    private final String strContexts;
 
     public SelfDescribeHandler(HttpContext[] contexts) {
         final StringBuilder builder = new StringBuilder();
@@ -81,6 +84,7 @@ public class SelfDescribeHandler implements HttpHandler {
 
 	@Override
     public void handle(HttpExchange exchange) throws IOException {
+        // TODO PFR replace with call to buildResponseAndClose()
         exchange.sendResponseHeaders(200, strContexts.length());
         final OutputStream os = exchange.getResponseBody();
         os.write(strContexts.getBytes());

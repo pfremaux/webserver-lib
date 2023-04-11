@@ -8,9 +8,9 @@ import webserver.handlers.web.ErrorReport;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class HandlerUtils {
+public class WebHandlerUtils {
 
-    private HandlerUtils() {
+    private WebHandlerUtils() {
     }
 
     public static boolean validateHttpRequest(HttpExchange exchange, String expectedMethod) throws IOException {

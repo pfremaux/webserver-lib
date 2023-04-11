@@ -30,15 +30,17 @@ function hide(o) {
 	if (typeof o === "string") {
 		log("cache "+o);
 		id(o).style.display = "none";
+	} else {
+	    o.style.display = "none";
 	}
-	o.style.display = "none";
 }
 
 function show(o) {
 	if (typeof o === "string") {
 		id(o).style.display = "inline";
+	} else {
+	    o.style.display = "inline";
 	}
-	o.style.display = "inline";
 }
 
 function toggle(o) {

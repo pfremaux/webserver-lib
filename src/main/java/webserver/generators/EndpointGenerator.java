@@ -6,10 +6,10 @@ import tools.JsonMapper;
 import tools.LogUtils;
 import tools.MdDoc;
 import tools.security.SimpleSecretHandler;
-import tools.security.Singletons;
+import tools.Singletons;
 import webserver.annotations.Endpoint;
 import webserver.annotations.Role;
-import webserver.handlers.HandlerUtils;
+import webserver.handlers.WebHandlerUtils;
 import webserver.handlers.web.auth.DefaultTokenFields;
 import webserver.handlers.web.auth.Token;
 import webserver.handlers.web.auth.TokenStructure;
@@ -110,7 +110,7 @@ public class EndpointGenerator {
                     }
 
                 }
-                if (HandlerUtils.validateHttpRequest(exchange, method)) {
+                if (WebHandlerUtils.validateHttpRequest(exchange, method)) {
                     return;
                 }
 

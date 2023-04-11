@@ -2,6 +2,7 @@ package tools;
 
 import com.sun.net.httpserver.HttpHandler;
 
+@Deprecated
 public class HttpContext {
     private final String path;
     private final HttpHandler handler;

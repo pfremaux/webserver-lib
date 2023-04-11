@@ -18,8 +18,6 @@ public class Example {
 
     public static void main(String[] args) throws IOException, UnrecoverableKeyException, CertificateException,
             NoSuchAlgorithmException, KeyStoreException, KeyManagementException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-
-
         final AuthenticationHandler authenticationHandler = new AuthenticationHandler(
                 AuthenticationHandler.MOCKED_AUTH,
                 AuthenticationHandler.MOCKED_PASSWORD_ENCRYPTOR

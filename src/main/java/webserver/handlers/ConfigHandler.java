@@ -109,7 +109,7 @@ public class ConfigHandler {
 
     public static void loadConfigFile(String configFile) {
         final Path configFilePath = Path.of(configFile);
-        if (Files.exists(configFilePath)) {
+        if (!Files.exists(configFilePath)) {
             LogUtils.error("Config file parameter provided but the properties file doesn't exist providedParameter=[%s], fullPath=[%s]", configFile, configFilePath.toFile().getAbsolutePath());
             SystemUtils.failUser();
         }

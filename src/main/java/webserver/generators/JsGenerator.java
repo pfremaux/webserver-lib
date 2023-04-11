@@ -7,6 +7,9 @@ public class JsGenerator {
 	}
 
 	public static String asyncCallSource() {
+		// First declare ACCOUNT. This object will contain account information when the user authenticated.
+		// Below, there is the function that will do a async call.
+		// All generated methods (for each endpoints) will call this function.
 		return """
 				let ACCOUNT = undefined;
 				
@@ -28,6 +31,7 @@ public class JsGenerator {
 	}
 
 	public static String authSource() {// TODO PFR bien commenter pour dire que ce code est dependant du code genere
+		// Authentication call...
 		return """
 				function auth(login, pass, fn) {
 					_auth(login, pass, obj => {
@@ -40,6 +44,11 @@ public class JsGenerator {
 				""";
 	}
 
+	/**
+	 * Generate a function based on an endpoint metadata a programmers created outside of this library.
+	 * @param info
+	 * @return
+	 */
 	public static StringBuilder generateJsCall(DocumentedEndpoint info) {
 		final StringBuilder builder = new StringBuilder();
 		final String methodName = info.getJavaMethodName();
@@ -69,6 +78,13 @@ public class JsGenerator {
 		return builder;
 	}
 
+	/**
+	 * Generates a chunk of json object, in Javascript.
+	 * TODO PFR clarifier le contenu de ce qui est généré
+	 * Takes all parameters registered in the endpoint metadata, and groups them in a json object.
+	 * @param builder
+	 * @param doc
+	 */
 	private static void groupInputFieldToObjects(StringBuilder builder, DocumentedEndpoint doc) {
 		doc.getParameters().forEach((key, value) ->
 				builder.append("\"")

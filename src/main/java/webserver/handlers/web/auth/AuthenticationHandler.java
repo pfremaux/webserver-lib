@@ -4,9 +4,9 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import tools.JsonMapper;
 import tools.security.SimpleSecretHandler;
-import tools.security.Singletons;
+import tools.Singletons;
 import tools.security.symetric.SymmetricHandler;
-import webserver.handlers.HandlerUtils;
+import webserver.handlers.WebHandlerUtils;
 import webserver.handlers.web.BaseError;
 
 import javax.crypto.BadPaddingException;
@@ -69,14 +69,14 @@ public class AuthenticationHandler implements HttpHandler {
             return;
         }
         if (jsonData == null) {
-            HandlerUtils.prepareErrorResponse(exchange, 400, BaseError.MISSING_BODY);
+            WebHandlerUtils.prepareErrorResponse(exchange, 400, BaseError.MISSING_BODY);
             return;
         }
         final String login = jsonData.getLogin();
         final String pass = jsonData.getPass();
         final AuthenticationResult authenticationResult = authenticate(login, pass);
         if (!authenticationResult.valid) {
-            HandlerUtils.prepareErrorResponse(exchange, 400, AuthError.BAD_CREDENTIALS);
+            WebHandlerUtils.prepareErrorResponse(exchange, 400, AuthError.BAD_CREDENTIALS);
             return;
         }
         Token token = new Token();
