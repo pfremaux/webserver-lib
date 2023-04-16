@@ -3,6 +3,7 @@ package webserver.handlers.web.auth;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import tools.JsonMapper;
+import tools.MdDoc;
 import tools.security.SimpleSecretHandler;
 import tools.Singletons;
 import tools.security.symetric.SymmetricHandler;
@@ -24,6 +25,8 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+@MdDoc(description = "This HTTP handler is responsible to authenticate a user. " +
+        "The programmer must instantiate it the right way to authenticate their user via the constructor.")
 public class AuthenticationHandler implements HttpHandler {
 
     public static final BiFunction<String, String, AuthenticationResult> MOCKED_AUTH = (String login,
@@ -45,8 +48,13 @@ public class AuthenticationHandler implements HttpHandler {
     record AuthenticationResult(String userId, boolean valid, String errorDetails) {
     }
 
+    @MdDoc(description = "Programmers must instantiate this constructor by themselves. " +
+            "This library can't figure out by itself which users exist and which roles should be assigned.")
     public AuthenticationHandler(
+            @MdDoc(description = "This BiFunction should authenticate a user based on a login/password. Password is supposed to be encrypted by the other lambda: passwordEncryptor." +
+                    "i.e. this BiFunction should find out the pair login/encryptedPassword in a database to return a successful authentication.")
             BiFunction<String, String, AuthenticationResult> authenticationValidator,
+            @MdDoc(description = "This function must encrypt the password passed through the other parameter: authenticationValidator. This function will be called ")
             Function<String, String> passwordEncryptor) {
         this.authenticationValidator = authenticationValidator;
         this.passwordEncryptor = passwordEncryptor;

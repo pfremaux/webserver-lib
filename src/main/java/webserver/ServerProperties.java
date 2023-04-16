@@ -61,6 +61,9 @@ public enum ServerProperties {
             "Local path where the server should look for to stream videos."),
     LOG_LEVEL("log.level", "info", "Log level. Values can be: " + Arrays.toString(LogLevel.values())),
     LOG_FILE("log.file", null, "Path and name of the log file."),
+    LOG_HOUR_ZONE_ID("log.hour.zone.id", "UTC/Greenwich", "ZoneId that correspond to the timezone where the server is executed. " +
+            "If you want to use the same hour from anywhere on Earth, use 'UTC/Greenwich'. " +
+            "Otherwise, you can put 'America/Montreal' or 'Europe/Paris'."),
     ;
 
     private String key;

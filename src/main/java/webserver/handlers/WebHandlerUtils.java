@@ -2,6 +2,7 @@ package webserver.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 import tools.JsonMapper;
+import tools.MdDoc;
 import webserver.handlers.web.BaseError;
 import webserver.handlers.web.ErrorReport;
 
@@ -33,7 +34,12 @@ public class WebHandlerUtils {
     }
 
 
-    public static void buildResponseAndClose(HttpExchange exchange, String responseText) throws IOException {
+    @MdDoc(description = "Returns the given body response. If any extra header need to be returned you have to deal it by yourself in exchange.")
+    public static void buildResponseAndClose(
+            @MdDoc(description = "HttpExchange instance provided directly the interface HttpHandler")
+            HttpExchange exchange,
+            @MdDoc(description = "The full body response, commonly we're returning a JSON format.")
+            String responseText) throws IOException {
         exchange.sendResponseHeaders(200, responseText.length());
 
         final OutputStream os = exchange.getResponseBody();

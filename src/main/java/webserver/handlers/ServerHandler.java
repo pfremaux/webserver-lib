@@ -1,12 +1,8 @@
 package webserver.handlers;
 
 import com.sun.net.httpserver.*;
-import tools.CliParameterLoader;
-import tools.LogUtils;
-import tools.MdDoc;
-import tools.SystemUtils;
+import tools.*;
 import tools.security.SimpleSecretHandler;
-import tools.Singletons;
 import webserver.ServerProperties;
 import webserver.generators.DocumentedEndpoint;
 import webserver.generators.EndpointGenerator;
@@ -30,15 +26,15 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@MdDoc(description = "Entry point for the application that's using a webserver. You need to call the static method runServer(..).")
 public class ServerHandler {
-    private ServerHandler(){}
+    private ServerHandler() {
+    }
 
     @MdDoc(description = "Main method you need to call in order to start the server")
     public static void runServer(
             @MdDoc(description = "Command line parameters passed by the runner.")
             String[] args,
-            @MdDoc(description = "This Set must contain all classes paths that have @Endpoint annotations. All method annotated will generate a endpoint this server will expose.")
-            Set<String> classesPath,
             AuthenticationHandler authenticationHandler
     ) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, UnrecoverableKeyException, KeyManagementException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         final Set<String> providedParameters = Stream.of(args).collect(Collectors.toSet());
@@ -47,15 +43,16 @@ public class ServerHandler {
         // We need to process the config file FIRST and the command line after as some command line
         // might require some settings loaded in the config file.
         ConfigHandler.processConfigFile(providedParameters, parameters);
-        ConfigHandler.processCommandLineParameters(classesPath, providedParameters, parameters);
+        ConfigHandler.processCommandLineParameters(providedParameters, parameters);
 
         final char[] ksPass = Optional.ofNullable(parameters.get("--ksPass")).map(String::toCharArray).orElse(null);
         final char[] tokenPass = parameters.getOrDefault("--tokenPass", "CHANGEME").toCharArray();
-        loadConfigAndStartWebServer(classesPath, ksPass, tokenPass, authenticationHandler);
+        loadConfigAndStartWebServer( ksPass, tokenPass, authenticationHandler);
     }
 
     /**
      * Returns an instance with all supported parameters the user could pass.
+     *
      * @return CliParameterLoader.
      */
     private static CliParameterLoader getCliParameterLoader() {
@@ -69,7 +66,7 @@ public class ServerHandler {
     }
 
 
-    private static void loadConfigAndStartWebServer(Set<String> classesPath, char[] storePassKey, char[] tokenPass, AuthenticationHandler authenticationHandler)
+    private static void loadConfigAndStartWebServer(char[] storePassKey, char[] tokenPass, AuthenticationHandler authenticationHandler)
             throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException,
             UnrecoverableKeyException, KeyManagementException, NoSuchMethodException, ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
@@ -78,11 +75,13 @@ public class ServerHandler {
 
         // Instantiate each class that should contain @Endpoint
         final List<Object> instancesToProcess = new ArrayList<>();
-        // TODO stream
-        for (String classPath : classesPath) {
+        int counter = 0;
+        String classPath;
+        while ((classPath = System.getProperty("server.handlers." + counter + ".endpoint.class")) != null) {
             final Class<?> aClass = Class.forName(classPath);
             final Object newInstance = aClass.getConstructor().newInstance();
             instancesToProcess.add(newInstance);
+            counter++;
         }
 
         // Generate the documentation for each endpoint
@@ -150,13 +149,11 @@ public class ServerHandler {
 
         LogUtils.info("Create thread pool with a capacity of %d...", threadCount);
         server.setExecutor(Executors.newFixedThreadPool(threadCount));
-        // TODO PFR refactor to avoid useless toList()
         handlers.entrySet().stream()
                 .peek(entry -> LogUtils.info("Loading handler %s...", entry.getKey()))
-                .map(entry -> server.createContext(entry.getKey(), entry.getValue()))
-                .toList();
+                .forEach(entry -> server.createContext(entry.getKey(), entry.getValue()));
         server.start();
-        LogUtils.info("Accessible : %s://127.0.0.1:%d\n"+ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().orElse(""), initTls ? "https" : "http", port);
+        LogUtils.info("Accessible : %s://127.0.0.1:%d" + ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().orElse(""), initTls ? "https" : "http", port);
     }
 
     /*

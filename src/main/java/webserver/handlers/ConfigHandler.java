@@ -32,7 +32,7 @@ public class ConfigHandler {
     private ConfigHandler() {
     }
 
-    public static void processCommandLineParameters(Set<String> classesPath, Set<String> providedParameters, Map<String, String> parameters) throws IOException {
+    public static void processCommandLineParameters(Set<String> providedParameters, Map<String, String> parameters) throws IOException, NoSuchMethodException {
         // If user passed the help key, just display help and leave.
         if (providedParameters.contains(CliParameterLoader.DEFAULT_HELP_KEY)) {
             System.out.println(parameters.get(CliParameterLoader.DEFAULT_HELP_KEY));
@@ -54,10 +54,12 @@ public class ConfigHandler {
                     builder.append("=<not set by default>");
                     builder.append("\n");
                 }
+                builder.append("\n");
             }
             int counter = 0;
-            for (String classWithEndpoint : classesPath) {// TODO PFR implement the loading of classesPath from the properties keys
-                builder.append("server.handlers.").append(counter).append(".endpoint.class").append("=").append(classWithEndpoint).append("\n");
+            String classPath;
+            while ((classPath = System.getProperty("server.handlers." + counter + ".endpoint.class")) != null) {
+                builder.append("server.handlers.").append(counter).append(".endpoint.class").append("=").append(classPath).append("\n");
                 counter++;
             }
             final Path outputProperties = Path.of(ServerProperties.KEY_CONFIG_FILE_PATH.getValue().get());
@@ -127,7 +129,7 @@ public class ConfigHandler {
         }
 
         int accountCounter = 0;
-        String login = null;
+        String login;
         while ((login = p.getProperty(getLoginKey(accountCounter))) != null) {
             accountCounter++;
             String pwd = p.getProperty(getPasswordKey(accountCounter));

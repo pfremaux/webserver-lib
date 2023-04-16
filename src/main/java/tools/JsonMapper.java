@@ -296,14 +296,10 @@ public class JsonMapper {
     }
 
     public static Map<String, String> objectToMapDescriptor(Class<?> object) {
-        final Map<String, String> result = new HashMap<>();
-        // TODO PFR stream
-        for (Field field : object.getDeclaredFields()) {
-            final String name = field.getName();
-            final String simpleName = field.getType().getSimpleName();
-            result.put(name, simpleName);
-        }
-        return result;
+        return Arrays.stream(object.getDeclaredFields())
+                .collect(Collectors.toMap(
+                        Field::getName,
+                        f -> f.getType().getSimpleName()));
     }
 
     private static void addValue(StringBuilder builder, Object value, String simpleName) {

@@ -22,7 +22,7 @@ public class Example {
                 AuthenticationHandler.MOCKED_AUTH,
                 AuthenticationHandler.MOCKED_PASSWORD_ENCRYPTOR
         );
-        runServer(args, Set.of("webserver.example.MyEndpoints", "webserver.example.CommandManager"), authenticationHandler);
+        runServer(args, authenticationHandler);
     }
 
 }
