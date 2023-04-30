@@ -3,6 +3,7 @@ package webserver.handlers.web.auth;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import tools.JsonMapper;
+import tools.LogUtils;
 import tools.MdDoc;
 import tools.security.SimpleSecretHandler;
 import tools.Singletons;
@@ -67,19 +68,21 @@ public class AuthenticationHandler implements HttpHandler {
         final byte[] allBytes = requestBody.readAllBytes();
         final String bodyData = new String(allBytes, StandardCharsets.UTF_8);
         final AuthBody jsonData;
+        // Parse the request body
         try {
             jsonData = JsonMapper.jsonToObject(new StringBuilder(bodyData), AuthBody.class);
         } catch (NoSuchFieldException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            exchange.getResponseHeaders().add("Content-Type", "text/json");
-            exchange.sendResponseHeaders(400, 0);
-            exchange.getResponseBody().write(new byte[]{});
-            exchange.getResponseBody().close();
+            LogUtils.error("Client side didn't send a valid request. Can't parse the following body request: %s. ", bodyData);
+            LogUtils.error("Exception message is ", e);
+            WebHandlerUtils.prepareErrorResponse(exchange, 400, BaseError.INVALID_BODY);
             return;
         }
+        // No body request => error
         if (jsonData == null) {
             WebHandlerUtils.prepareErrorResponse(exchange, 400, BaseError.MISSING_BODY);
             return;
         }
+        // Authenticate the caller
         final String login = jsonData.getLogin();
         final String pass = jsonData.getPass();
         final AuthenticationResult authenticationResult = authenticate(login, pass);
@@ -87,36 +90,34 @@ public class AuthenticationHandler implements HttpHandler {
             WebHandlerUtils.prepareErrorResponse(exchange, 400, AuthError.BAD_CREDENTIALS);
             return;
         }
-        Token token = new Token();
+
+        // Create a Token for the caller
+        final Token token = new Token();
         token.put(DefaultTokenFields.USER_ID, authenticationResult.userId);
         token.put(DefaultTokenFields.VERSION, "0");
         token.put(DefaultTokenFields.EXPIRATION_TIMESTAMP_MS,
                 Long.toString(System.currentTimeMillis() + Duration.ofHours(1L).toMillis()));
         byte[] encrypt;
+        // Encrypt the token data before we return it to the caller.
         try {
             encrypt = SymmetricHandler.encrypt(Singletons.get(SimpleSecretHandler.class).getSecretKey(),
                     tokenStructure.getFormattedTokenInClear(token).getBytes(StandardCharsets.UTF_8),
                     SymmetricHandler.DEFAULT_SYMMETRIC_ALGO);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException
                  | IllegalBlockSizeException e) {
-            e.printStackTrace();
-            exchange.getResponseHeaders().add("Content-Type", "text/json");
-            exchange.sendResponseHeaders(400, e.getMessage().length());
-            exchange.getResponseBody().write(e.getMessage().getBytes());
-            exchange.getResponseBody().close();
+            LogUtils.error("Failed to encrypt the token: %s", token.prettyString());
+            LogUtils.error("", e);
+            WebHandlerUtils.prepareErrorResponse(exchange, 500, AuthError.ALGORITHM_ENCRYPTION);
             return;
         }
+        // Encryption is binary, HTTP is textual => encode in base64
         final byte[] base64Bytes = Base64.getEncoder().encode(encrypt);
         final String encryptedToken = new String(base64Bytes);
-        System.out.println(encryptedToken);
+        LogUtils.debug("Encrypted token: %s", encryptedToken);
 
-
+        // Put the token in a json response.
         final String msg = JsonMapper.fillWithJsonFormat(new StringBuilder(), Map.of("token", encryptedToken)).toString();
-
-        exchange.getResponseHeaders().add("Content-Type", "text/json");
-        exchange.sendResponseHeaders(200, msg.length());
-        exchange.getResponseBody().write(msg.getBytes(StandardCharsets.UTF_8));
-        exchange.getResponseBody().close();
+        WebHandlerUtils.buildValidResponseAndClose(exchange, msg);
     }
 
 

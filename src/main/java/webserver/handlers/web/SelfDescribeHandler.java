@@ -64,6 +64,6 @@ public class SelfDescribeHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        WebHandlerUtils.buildResponseAndClose(exchange, strContexts);
+        WebHandlerUtils.buildValidResponseAndClose(exchange, strContexts);
     }
 }

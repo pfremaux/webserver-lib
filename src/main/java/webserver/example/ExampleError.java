@@ -1,15 +1,15 @@
-package webserver.handlers.web;
+package webserver.example;
 
-public enum BaseError implements ErrorReport {
+import webserver.handlers.web.ErrorReport;
 
-    METHOD_NOT_ALLOWED("Method not allowed.", "1"),
-    MISSING_BODY("Missing request body.", "2"),
-    INVALID_BODY("Invalid request body.", "3");
+public enum ExampleError implements ErrorReport {
+
+    BAD_TOTO("Attribute toto should start with 'toto'.", "1");
 
     private final String message;
     private final String errorCode;
 
-    BaseError(String message, String errorCode) {
+    ExampleError(String message, String errorCode) {
         this.message = message;
         this.errorCode = errorCode;
     }

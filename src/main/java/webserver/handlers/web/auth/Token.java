@@ -22,4 +22,12 @@ public class Token {
     public String get(TokenField tokenField) {
         return tokenValues.get(tokenField);
     }
+
+    public String prettyString() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        tokenValues.forEach((field, value) -> builder.append(field.getKey()).append(":").append(value).append(";"));
+        builder.append("]");
+        return builder.toString();
+    }
 }

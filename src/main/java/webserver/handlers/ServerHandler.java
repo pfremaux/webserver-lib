@@ -31,10 +31,11 @@ public class ServerHandler {
     private ServerHandler() {
     }
 
-    @MdDoc(description = "Main method you need to call in order to start the server")
+    @MdDoc(description = "Main method you need to call in order to start the server.")
     public static void runServer(
             @MdDoc(description = "Command line parameters passed by the runner.")
             String[] args,
+            @MdDoc(description = "This HTTP handler will validate the caller's authentication.")
             AuthenticationHandler authenticationHandler
     ) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, UnrecoverableKeyException, KeyManagementException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         final Set<String> providedParameters = Stream.of(args).collect(Collectors.toSet());
@@ -45,9 +46,10 @@ public class ServerHandler {
         ConfigHandler.processConfigFile(providedParameters, parameters);
         ConfigHandler.processCommandLineParameters(providedParameters, parameters);
 
+        // These parameters shouldn't be defined in ServerProperties as it's related to passwords, it's a bit sensitive.
         final char[] ksPass = Optional.ofNullable(parameters.get("--ksPass")).map(String::toCharArray).orElse(null);
         final char[] tokenPass = parameters.getOrDefault("--tokenPass", "CHANGEME").toCharArray();
-        loadConfigAndStartWebServer( ksPass, tokenPass, authenticationHandler);
+        startWebServer(ksPass, tokenPass, authenticationHandler);
     }
 
     /**
@@ -66,7 +68,7 @@ public class ServerHandler {
     }
 
 
-    private static void loadConfigAndStartWebServer(char[] storePassKey, char[] tokenPass, AuthenticationHandler authenticationHandler)
+    private static void startWebServer(char[] storePassKey, char[] tokenPass, AuthenticationHandler authenticationHandler)
             throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException,
             UnrecoverableKeyException, KeyManagementException, NoSuchMethodException, ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
@@ -77,6 +79,8 @@ public class ServerHandler {
         final List<Object> instancesToProcess = new ArrayList<>();
         int counter = 0;
         String classPath;
+        // Loads each classes that have @Endpoint annotation on its methods.
+        // The user will have to do it manually until we add a way to scan a whole project.
         while ((classPath = System.getProperty("server.handlers." + counter + ".endpoint.class")) != null) {
             final Class<?> aClass = Class.forName(classPath);
             final Object newInstance = aClass.getConstructor().newInstance();
@@ -84,7 +88,9 @@ public class ServerHandler {
             counter++;
         }
 
-        // Generate the documentation for each endpoint
+        // Generate js libs AND Generate the API documentation for each endpoint.
+        // TODO PFR Generate API endpoints in a static file instead of doing it at each startup:
+        //  Ideally we shouldn't have to generate it at each startup. The goal is to reduce the time to run the server.
         final List<DocumentedEndpoint> endpointsDocs = new ArrayList<>();
         final StringBuilder jsScript = new StringBuilder();
         jsScript.append(JsGenerator.asyncCallSource());
@@ -93,7 +99,7 @@ public class ServerHandler {
                         doc -> jsScript.append(JsGenerator.generateJsCall(doc)),
                         doc -> LogUtils.info("Documenting generated endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
 
-        // If an auth endpoint has been set up then register it.
+        // If the auth endpoint has been set up then register it and expose it.
         if (ServerProperties.KEY_AUTH_ENDPOINT.getValue().isPresent()) {
             LogUtils.info("Initializing auth endpoint...");
             final String relativePathEndpoint = ServerProperties.KEY_AUTH_ENDPOINT.getValue().get();
@@ -105,6 +111,8 @@ public class ServerHandler {
         }
 
         // If a js library has been set up then generate a js method for each endpoint to call them.
+        // TODO PFR Generate js lib once, in a static file instead of generating it each time we run the server
+        //  In order to reduce the time to run the server, the file should already exist. Ideally we should store it in a cache.
         if (ServerProperties.KEY_GENERATE_JS_LIB_ENDPOINT.getValue().isPresent()) {
             LogUtils.info("Initializing Javascript library...");
             final String jsSourceCode = jsScript.toString();
@@ -118,6 +126,8 @@ public class ServerHandler {
         }
 
         // If an endpoint for shared static files, create it.
+        // TODO PFR Create a cache for the most used static files
+        //  Maybe something like: a limited list with files, each of them would have a last request date.
         if (ServerProperties.KEY_STATIC_FILES_ENDPOINT_RELATIVE_PATH.getValue().isPresent()) {
             LogUtils.info("Initializing static files handler...");
             handlers.put(ServerProperties.KEY_STATIC_FILES_ENDPOINT_RELATIVE_PATH.getValue().get(), new ServeFileHandler());

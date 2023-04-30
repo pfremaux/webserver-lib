@@ -9,7 +9,9 @@ import tools.security.SimpleSecretHandler;
 import tools.Singletons;
 import webserver.annotations.Endpoint;
 import webserver.annotations.Role;
+import webserver.annotations.validator.Validator;
 import webserver.handlers.WebHandlerUtils;
+import webserver.handlers.web.ErrorReport;
 import webserver.handlers.web.auth.DefaultTokenFields;
 import webserver.handlers.web.auth.Token;
 import webserver.handlers.web.auth.TokenStructure;
@@ -49,6 +51,7 @@ public class EndpointGenerator {
                 continue;
             }
             final Role requiredRole = declaredMethod.getDeclaredAnnotation(Role.class);
+            final Validator methodInputValidator = declaredMethod.getDeclaredAnnotation(Validator.class);
             // Gets the body instance
             final Parameter bodyParameter = Stream.of(declaredMethod.getParameters())
                     .filter((Parameter p) -> !p.getType().equals(Map.class)).findFirst().orElse(null);
@@ -94,8 +97,8 @@ public class EndpointGenerator {
                         LogUtils.info(secValues.get(0));
 
                     }
-                    String token = secValues.get(0);
-                    SimpleSecretHandler secretHandler = Singletons.get(SimpleSecretHandler.class);
+                    final String token = secValues.get(0);
+                    final SimpleSecretHandler secretHandler = Singletons.get(SimpleSecretHandler.class);
                     try {
                         LogUtils.info("deciphering token...");
                         final String decrypt = secretHandler.decrypt(Base64.getDecoder().decode(token));
@@ -110,7 +113,7 @@ public class EndpointGenerator {
                     }
 
                 }
-                if (WebHandlerUtils.validateHttpRequest(exchange, method)) {
+                if (!WebHandlerUtils.validateHttpRequest(exchange, method)) {
                     return;
                 }
 
@@ -120,6 +123,14 @@ public class EndpointGenerator {
                 try {
                     final String data = new String(bytes, StandardCharsets.UTF_8);
                     final Object b = JsonMapper.jsonToObject(new StringBuilder(data), bodyParameter.getType());
+                    if (methodInputValidator != null) {
+                        Method validationMethod = methodInputValidator.validator().getDeclaredMethod(methodInputValidator.validationMethod(), methodInputValidator.inputs());
+                        Object error  = validationMethod.invoke(null, b);
+                        if (error != null) {
+                            WebHandlerUtils.prepareErrorResponse(exchange, 400, (ErrorReport) error);
+                            return ;
+                        }
+                    }
 
                     result = declaredMethod.invoke(instanceToProcess, headers, b);
                 } catch (Throwable e) {

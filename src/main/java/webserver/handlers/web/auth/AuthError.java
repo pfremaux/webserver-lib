@@ -4,7 +4,8 @@ import webserver.handlers.web.ErrorReport;
 
 public enum AuthError implements ErrorReport {
 
-    BAD_CREDENTIALS("Wrong credentials.", "1");
+    BAD_CREDENTIALS("Wrong credentials.", "1"),
+    ALGORITHM_ENCRYPTION("Algorithm encryption error. Mostly a server issue.", "2");
 
     private final String message;
     private final String errorCode;

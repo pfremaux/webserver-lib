@@ -6,12 +6,13 @@ import java.util.Map;
 import tools.MdDoc;
 import webserver.annotations.Endpoint;
 import webserver.annotations.Role;
+import webserver.annotations.validator.Validator;
 
 public class MyEndpoints {
 
 	@Endpoint(path = "/toto", method = "GET")
 	@MdDoc(description = "My description!!!")
-	@Role(value = "coucou")
+	// TODO PFR remettre @Role(value = "coucou")
 	public Body go(Map<String, List<String>> headers, Body body) {
 		return new Body("reponse");
 	}

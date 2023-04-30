@@ -100,10 +100,12 @@ public class ConfigHandler {
             final String configFile = parameters.get(CONFIG_FILE);
             ConfigHandler.loadConfigFile(configFile);
         } else if (ServerProperties.KEY_CONFIG_FILE_PATH.getValue().map(path -> Files.exists(Path.of(path))).orElse(false)) {
+            // If no config file parameter is passed, we're taking the default path where we could find this file.
             final String configFile = ServerProperties.KEY_CONFIG_FILE_PATH.getValue().get();
             LogUtils.info("Default config file found [%s]", configFile);
             ConfigHandler.loadConfigFile(configFile);
         } else {
+            // No config file found, we'll just rely on the default values.
             LogUtils.warning("No config file provided, trying to run anyway...");
         }
     }
@@ -118,7 +120,7 @@ public class ConfigHandler {
         LogUtils.info("Config file %s found. Loading settings...", configFile);
         final Properties p = new Properties();
         try {
-            p.load(new FileInputStream(configFilePath.toFile())); // Load the properties from a file in your jar
+            p.load(new FileInputStream(configFilePath.toFile())); // Load the properties from a file stored in this jar
         } catch (IOException e) {
             LogUtils.error("Failed to load the config file: " + configFilePath.toFile().getAbsolutePath(), e);
             SystemUtils.failSystem();
@@ -128,6 +130,7 @@ public class ConfigHandler {
             System.setProperty(name, value);
         }
 
+        // For now accounts are defined in the properties file. Passwords should be hashed, but it's still not the best approach.
         int accountCounter = 0;
         String login;
         while ((login = p.getProperty(getLoginKey(accountCounter))) != null) {
