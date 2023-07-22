@@ -1,5 +1,4 @@
-function installSideMenu() {
-	let panelMainGlobalDiv = el('div');
+function installSideMenu(panelMainGlobalDiv, bodyId, menu) {
 	let panelMainDiv = el('div');
 	panelMainGlobalDiv.appendChild(panelMainDiv);
 	panelMainGlobalDiv.className = 'sp-panel-right';
@@ -21,5 +20,24 @@ function installSideMenu() {
 	
 	document.body.appendChild(panelMainGlobalDiv);
 	document.body.appendChild(hideButton);
+	let body = el('div');
+	body.id = bodyId;
+	// TODO PFR better approach
+	body.innerHTML = 'empty body';
+	body.style.width = '100%';
+	body.style.height = '100%';
+	document.body.appendChild(body);
+
+
+	let menuDiv = el('div');
+	for (let indexMenu in menu) {
+	    let option = el('a');
+	    option.href = '#';
+	    option.onclick = e => menu[indexMenu].action();
+	    option.innerHTML = menu[indexMenu].label;
+	    menuDiv.appendChild(option);
+	    menuDiv.appendChild(el('br'));
+	}
+	panelMainDiv.appendChild(menuDiv);
 	return panelMainDiv;
 }

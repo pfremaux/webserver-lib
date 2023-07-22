@@ -2,55 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Example of auth</title>
+    <title>Example</title>
     <script src="../js/formCreator.js"></script>
     <script src="../js/helpers.js"></script>
+    <script src="../js/sidePanel.js"></script>
     <script src="/lib.js"></script>
+    <script src="../js/screen-auth.js"></script>
+    <script src="../js/todoList.js"></script>
+    <link rel="stylesheet" href="../sidePanel.css">
 </head>
 <body>
-Note: admin/admin should do the job for this example.<br>
+
 <div id="containerId">
 </div>
+
 <script>
+    function installListScreen(bodyId) {
+        removeAllChildren(bodyId);
+        let body = id(bodyId);
+        installTodoList(body);
+    }
 
-let container = id('containerId');
-let labelName = new Element('label')
-        .withText('Name:')
-        .forId('idName')
-        .get();
-container.appendChild(labelName);
-let name = new Element('input')
-        .withId('idName')
-        .get();
-container.appendChild(name);
-let labelPwd = new Element('label')
-        .withText('Password:')
-        .forId('idPwd')
-        .get();
-container.appendChild(labelPwd);
-let password = new Element('input')
-        .withId('idPwd')
-        .get();
-password.type = 'password';
-container.appendChild(password);
+    showAuth(id("containerId"), res => {
+        if (res.token) {
+            removeAllChildren('containerId');
+            installSideMenu(id('containerId'), 'bodyId', [
+                { label:'List', action: o => installListScreen('bodyId')},
+                { label:'Logout', action: o => redirectLogout('idContainer') }
+            ]);
+        }
+    });
 
-let button = new Element('button')
-        .withText('Authenticate')
-        .onClick(e => {
-            let name = id('idName').value;
-            let pwd = id('idPwd').value;
-            // The method bellow is generated automatically by the server. The method is declared in server-lib.js
-            auth(name, pwd, obj => id('output').innerHTML = obj);
-        }).get();
-container.appendChild(button);
-
-
-
+    let form = new Form({
+        "idFieldA":{
+            "type":"text",
+            "label":"label fieldA"
+        },
+        "idSubmit":{
+            "type":"button",
+            "label":"Fake submit of form",
+            "onClick": e=> alert(e)
+        }
+    });
+    form.insertIn(id("containerId"));
 </script>
 
-<br>
-Response:<br>
-<div id="output"></div>
+
 
 </body>
 </html>

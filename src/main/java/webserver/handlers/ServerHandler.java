@@ -7,6 +7,9 @@ import webserver.ServerProperties;
 import webserver.generators.DocumentedEndpoint;
 import webserver.generators.EndpointGenerator;
 import webserver.generators.JsGenerator;
+import webserver.generators.js.JsType;
+import webserver.generators.js.MetaDataBuilder;
+import webserver.generators.js.MetadataComponent;
 import webserver.handlers.web.SelfDescribeHandler;
 import webserver.handlers.web.ServeFileHandler;
 import webserver.handlers.web.auth.AuthenticationHandler;
@@ -17,6 +20,7 @@ import javax.net.ssl.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.security.*;
@@ -97,6 +101,7 @@ public class ServerHandler {
         final Map<String, HttpHandler> handlers = EndpointGenerator.loadHttpHandlers(instancesToProcess,
                 List.of(endpointsDocs::add,
                         doc -> jsScript.append(JsGenerator.generateJsCall(doc)),
+                        doc -> jsScript.append(generateFormCreationInJs(doc)),
                         doc -> LogUtils.info("Documenting generated endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
 
         // If the auth endpoint has been set up then register it and expose it.
@@ -112,7 +117,7 @@ public class ServerHandler {
 
         // If a js library has been set up then generate a js method for each endpoint to call them.
         // TODO PFR Generate js lib once, in a static file instead of generating it each time we run the server
-        //  In order to reduce the time to run the server, the file should already exist. Ideally we should store it in a cache.
+        //  In order to reduce the time to start the server, the file should already exist. Ideally we should store it in a cache.
         if (ServerProperties.KEY_GENERATE_JS_LIB_ENDPOINT.getValue().isPresent()) {
             LogUtils.info("Initializing Javascript library...");
             final String jsSourceCode = jsScript.toString();
@@ -164,6 +169,35 @@ public class ServerHandler {
                 .forEach(entry -> server.createContext(entry.getKey(), entry.getValue()));
         server.start();
         LogUtils.info("Accessible : %s://127.0.0.1:%d" + ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().orElse(""), initTls ? "https" : "http", port);
+    }
+
+    // TODO PFR maybe move somewhere else
+    private static StringBuilder generateFormCreationInJs(DocumentedEndpoint documentedEndpoint) {
+        final StringBuilder formGeneratorBuilder = new StringBuilder();
+        if (!documentedEndpoint.isHasForm()) {
+            return formGeneratorBuilder;
+        }
+
+        formGeneratorBuilder.append("function addForm");
+        formGeneratorBuilder.append(documentedEndpoint.getJavaMethodName());
+        formGeneratorBuilder.append("(containerId) {");
+        final MetaDataBuilder metaDataBuilder = new MetaDataBuilder();
+        metaDataBuilder.init();
+        for (Field declaredField : documentedEndpoint.getBodyType().getDeclaredFields()) {
+            final MetadataComponent cmp = new MetadataComponent(
+                    "id" + declaredField.getName(),
+                    JsType.fromJavaType(declaredField.getType()),
+                    declaredField.getName(),
+                    null);
+            metaDataBuilder.addComponent(cmp);
+        }
+        metaDataBuilder.addComponent(new MetadataComponent("id" + documentedEndpoint.getJavaMethodName() + "Submit", JsType.BUTTON, "Submit", "e => log(e)"));
+        metaDataBuilder.close();
+        formGeneratorBuilder.append("new Form(\n");
+        formGeneratorBuilder.append(metaDataBuilder.getCode());
+        formGeneratorBuilder.append(").insertIn(containerId);\n");
+        formGeneratorBuilder.append("}\n");
+        return formGeneratorBuilder;
     }
 
     /*

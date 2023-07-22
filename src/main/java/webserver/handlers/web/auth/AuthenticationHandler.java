@@ -5,8 +5,8 @@ import com.sun.net.httpserver.HttpHandler;
 import tools.JsonMapper;
 import tools.LogUtils;
 import tools.MdDoc;
-import tools.security.SimpleSecretHandler;
 import tools.Singletons;
+import tools.security.SimpleSecretHandler;
 import tools.security.symetric.SymmetricHandler;
 import webserver.handlers.WebHandlerUtils;
 import webserver.handlers.web.BaseError;
@@ -22,7 +22,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Base64;
-import java.util.Map;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -33,9 +33,9 @@ public class AuthenticationHandler implements HttpHandler {
     public static final BiFunction<String, String, AuthenticationResult> MOCKED_AUTH = (String login,
                                                                                         String password) -> {
         if ("admin".equals(login) && "admin".equals(password)) {
-            return new AuthenticationResult("1", true, "");
+            return new AuthenticationResult("1", true, "", List.of("admin"));
         }
-        return new AuthenticationResult(null, false, "");
+        return new AuthenticationResult(null, false, "", List.of());
     };
 
     public static final Function<String, String> MOCKED_PASSWORD_ENCRYPTOR = Function.identity();
@@ -46,7 +46,7 @@ public class AuthenticationHandler implements HttpHandler {
     private final Function<String, String> passwordEncryptor;
 
 
-    record AuthenticationResult(String userId, boolean valid, String errorDetails) {
+    record AuthenticationResult(String userId, boolean valid, String errorDetails, List<String> roles) {
     }
 
     @MdDoc(description = "Programmers must instantiate this constructor by themselves. " +
@@ -116,7 +116,8 @@ public class AuthenticationHandler implements HttpHandler {
         LogUtils.debug("Encrypted token: %s", encryptedToken);
 
         // Put the token in a json response.
-        final String msg = JsonMapper.fillWithJsonFormat(new StringBuilder(), Map.of("token", encryptedToken)).toString();
+        final String msg = JsonMapper.objectToJson(
+                new AuthenticationResponse(encryptedToken, authenticationResult.roles)).toString();
         WebHandlerUtils.buildValidResponseAndClose(exchange, msg);
     }
 

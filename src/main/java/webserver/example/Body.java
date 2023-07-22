@@ -12,7 +12,7 @@ TODO PFR En raison de l approche KISS pour ce projet, on va peut etre eviter une
  En respectant KISS on impose a n'avoir qu'un seul scenario possible pour valider l'input.
  Par ailleurs on peut faire des controles plus specifiques si 2 fields sont dependants en terme de logique. (la ou imposer une validation field par field les isolerait)
 
- Si on avait cree une annotation @Validate au niveau du endpoint il aurait fallu referencer une class + method a executer. Cela pourrait demander plus de temps a concevoir.
+  Si on avait cree une annotation @Validate au niveau du endpoint il aurait fallu referencer une class + method a executer. Cela pourrait demander plus de temps a concevoir.1
  * */
 	@JsonField
     private final String toto;
@@ -22,12 +22,8 @@ TODO PFR En raison de l approche KISS pour ce projet, on va peut etre eviter une
     }
 
     @Override
-    public <T extends ValidationTrait> ErrorReport validate(T b) {
-        return null;
-    }
-
-    public ErrorReport validate(Body b) {
-        if (b.getToto().toLowerCase().startsWith("toto")) {
+    public ErrorReport validate() {
+        if (this.toto.toLowerCase().startsWith("toto")) {
             return null;
         }
 

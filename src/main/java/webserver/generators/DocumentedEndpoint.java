@@ -10,14 +10,17 @@ public class DocumentedEndpoint {
     private String path;
     private String description;
     private String bodyExample;
+    private Class<?> bodyType;
     private String responseExample;
     private String role;
     private Map<String, String> parameters = new HashMap<>();
     private Parameter returnType = null;
+    private boolean hasForm;
 
     public DocumentedEndpoint() {
 
     }
+
     public DocumentedEndpoint(String role, String javaMethodName, String httpMethod, String path, String description, String bodyExample, String responseExample, Map<String, String> parameters, Parameter returnType) {
         this.javaMethodName = javaMethodName;
         this.httpMethod = httpMethod;
@@ -95,6 +98,13 @@ public class DocumentedEndpoint {
         this.javaMethodName = javaMethodName;
     }
 
+    public Class<?> getBodyType() {
+        return bodyType;
+    }
+
+    public void setBodyType(Class<?> bodyType) {
+        this.bodyType = bodyType;
+    }
 
     public void setRole(String role) {
         this.role = role;
@@ -102,5 +112,13 @@ public class DocumentedEndpoint {
 
     public String getRole() {
         return role;
+    }
+
+    public boolean isHasForm() {
+        return hasForm;
+    }
+
+    public void setHasForm(boolean hasForm) {
+        this.hasForm = hasForm;
     }
 }

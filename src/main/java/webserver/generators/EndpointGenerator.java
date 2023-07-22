@@ -5,11 +5,15 @@ import com.sun.net.httpserver.HttpHandler;
 import tools.JsonMapper;
 import tools.LogUtils;
 import tools.MdDoc;
-import tools.security.SimpleSecretHandler;
 import tools.Singletons;
+import tools.security.SimpleSecretHandler;
 import webserver.annotations.Endpoint;
+import webserver.annotations.Form;
 import webserver.annotations.Role;
 import webserver.annotations.validator.Validator;
+import webserver.generators.js.JsType;
+import webserver.generators.js.MetaDataBuilder;
+import webserver.generators.js.MetadataComponent;
 import webserver.handlers.WebHandlerUtils;
 import webserver.handlers.web.ErrorReport;
 import webserver.handlers.web.auth.DefaultTokenFields;
@@ -21,6 +25,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
@@ -44,6 +49,7 @@ public class EndpointGenerator {
 
     private static Map<String, HttpHandler> extractEndpointsFromClasses(Object instanceToProcess, List<Consumer<DocumentedEndpoint>> addons, Map<String, HttpHandler> handlers) {
         final Class<?> class1 = instanceToProcess.getClass();
+        final StringBuilder formGeneratorBuilder = new StringBuilder();
         // Look for all endpoint and process all methods annotated @Endpoint
         for (Method declaredMethod : class1.getDeclaredMethods()) {
             final Endpoint declaredAnnotation = declaredMethod.getDeclaredAnnotation(Endpoint.class);
@@ -53,33 +59,45 @@ public class EndpointGenerator {
             final Role requiredRole = declaredMethod.getDeclaredAnnotation(Role.class);
             final Validator methodInputValidator = declaredMethod.getDeclaredAnnotation(Validator.class);
             // Gets the body instance
-            final Parameter bodyParameter = Stream.of(declaredMethod.getParameters())
-                    .filter((Parameter p) -> !p.getType().equals(Map.class)).findFirst().orElse(null);
+            final Optional<Parameter> bodyParameter = Stream.of(declaredMethod.getParameters())
+                    .filter((Parameter p) -> !p.getType().equals(Map.class)).findFirst();
 
             // TODO allow no body.
-            if (bodyParameter == null) {
+            /*if (bodyParameter == null) {
                 throw new NullPointerException(
                         "body attribute is null for method '" + declaredMethod.getName() + "'. All method annotated with @Endpoint should have 2 parameters :"
                                 + "(Map<String, List<String>> headers, Body body)");
-            }
+            }*/
 
             final String method = declaredAnnotation.method();
             final String path = declaredAnnotation.path();
+            if (handlers.containsKey(path)) {
+                throw new IllegalArgumentException("Duplicate path: '%s' even if they have different HTTP method.".formatted(path));
+            }
 
             final DocumentedEndpoint documentedEndpoint = new DocumentedEndpoint();
             documentedEndpoint.setJavaMethodName(declaredMethod.getName());
             documentedEndpoint.setHttpMethod(method);
             documentedEndpoint.setPath(path);
             documentedEndpoint.setRole(requiredRole == null ? null : requiredRole.value());
+
             try {
-                documentedEndpoint.setBodyExample(JsonMapper.objectToJsonExample(bodyParameter.getType()).toString());
+                if (bodyParameter.isPresent()) {
+                    final Class<?> bodyParameterType = bodyParameter.get().getType();
+                    documentedEndpoint.setBodyExample(JsonMapper.objectToJsonExample(bodyParameterType).toString());
+                    final Optional<Form> formAnnotation = Optional.ofNullable(bodyParameterType.getAnnotation(Form.class));
+                    if (formAnnotation.isPresent()) {
+                        documentedEndpoint.setHasForm(true);
+                        documentedEndpoint.setBodyType(bodyParameterType);//TODO PFR can be merged with parameter setter above
+                    }
+                }
                 documentedEndpoint.setResponseExample(JsonMapper.objectToJsonExample(declaredMethod.getReturnType()).toString());
             } catch (ClassNotFoundException e1) {
                 throw new IllegalStateException("Endpoint creation failed.", e1);
             }
 
-            final HttpHandler handler = exchange -> {
-                final Map<String, List<String>> headers = new HashMap<>(exchange.getRequestHeaders());
+            final HttpHandler handler = mutableInputOutputObject -> {
+                final Map<String, List<String>> headers = new HashMap<>(mutableInputOutputObject.getRequestHeaders());
                 LogUtils.info("Entering enpoint");
                 if (requiredRole != null) {
                     LogUtils.info("Role required " + requiredRole + " ; headers = " + headers);
@@ -87,11 +105,11 @@ public class EndpointGenerator {
                     if (secValues == null || secValues.size() == 0) {
                         LogUtils.info("header sec = " + requiredRole);
                         final String msg = "Missing security token";
-                        exchange.sendResponseHeaders(403, msg.length());
-                        final OutputStream os = exchange.getResponseBody();
+                        mutableInputOutputObject.sendResponseHeaders(403, msg.length());
+                        final OutputStream os = mutableInputOutputObject.getResponseBody();
                         os.write(msg.getBytes());
                         os.close();
-                        exchange.getResponseBody().close();
+                        mutableInputOutputObject.getResponseBody().close();
                         return;
                     } else {
                         LogUtils.info(secValues.get(0));
@@ -113,44 +131,47 @@ public class EndpointGenerator {
                     }
 
                 }
-                if (!WebHandlerUtils.validateHttpRequest(exchange, method)) {
+                if (!WebHandlerUtils.validateHttpRequest(mutableInputOutputObject, method)) {// TODO PFR il peut y avoir confusion si on a 2 endpoints avec la meme url mais pas la meme method
                     return;
                 }
 
-                final byte[] bytes = exchange.getRequestBody().readAllBytes();
+                final byte[] bytes = mutableInputOutputObject.getRequestBody().readAllBytes();
                 final Object result;
-
                 try {
                     final String data = new String(bytes, StandardCharsets.UTF_8);
-                    final Object b = JsonMapper.jsonToObject(new StringBuilder(data), bodyParameter.getType());
-                    if (methodInputValidator != null) {
-                        Method validationMethod = methodInputValidator.validator().getDeclaredMethod(methodInputValidator.validationMethod(), methodInputValidator.inputs());
-                        Object error  = validationMethod.invoke(null, b);
-                        if (error != null) {
-                            WebHandlerUtils.prepareErrorResponse(exchange, 400, (ErrorReport) error);
-                            return ;
+                    if (bodyParameter.isPresent()) {
+                        final Object b = JsonMapper.jsonToObject(new StringBuilder(data), bodyParameter.get().getType());
+                        if (methodInputValidator != null) {
+                            Method validationMethod = methodInputValidator.validator().getDeclaredMethod(methodInputValidator.validationMethod(), methodInputValidator.inputs());
+                            Object error = validationMethod.invoke(null, b);// TODO PFR c est plus des statics donc il faudra une instance d'object a appeler
+                            if (error != null) {
+                                WebHandlerUtils.prepareErrorResponse(mutableInputOutputObject, 400, (ErrorReport) error);
+                                return;
+                            }
                         }
+                        result = declaredMethod.invoke(instanceToProcess, headers, b);
+                    } else {
+                        result = declaredMethod.invoke(instanceToProcess, headers);
                     }
-
-                    result = declaredMethod.invoke(instanceToProcess, headers, b);
                 } catch (Throwable e) {
-                    handleException(exchange, e);
+                    handleException(mutableInputOutputObject, e);
                     return;
                 }
 
                 final String responseText = result == null ? "{}" : JsonMapper.objectToJson(result).toString();
-                exchange.sendResponseHeaders(200, responseText.length());
+                mutableInputOutputObject.sendResponseHeaders(200, responseText.length());
 
-                final OutputStream os = exchange.getResponseBody();
+                final OutputStream os = mutableInputOutputObject.getResponseBody();
                 os.write(responseText.getBytes());
                 os.close();
-                exchange.getResponseBody().close();
-                return;
+                mutableInputOutputObject.getResponseBody().close();
             };
             handlers.put(path, handler);
 
-            final Map<String, String> nameToTypeParamers = JsonMapper.objectToMapDescriptor(bodyParameter.getType());
-            documentedEndpoint.setParameters(nameToTypeParamers);
+            if (bodyParameter.isPresent()) {
+                final Map<String, String> nameToTypeParamers = JsonMapper.objectToMapDescriptor(bodyParameter.get().getType());
+                documentedEndpoint.setParameters(nameToTypeParamers);
+            }
 
             final MdDoc declaredDoc = declaredMethod.getDeclaredAnnotation(MdDoc.class);
             if (declaredDoc != null) {
@@ -163,6 +184,11 @@ public class EndpointGenerator {
 
         return handlers;
     }
+
+
+    enum Error {};
+    record ResultPartialRequestHandled<T>(T resultData, ErrorReport  error){}
+
 
     private static void handleException(HttpExchange exchange, Throwable t) throws IOException {
         final String msg = t.getLocalizedMessage() + "\n"

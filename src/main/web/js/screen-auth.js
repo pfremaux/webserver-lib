@@ -1,7 +1,7 @@
 
 
 function showAuth(container, onSuccess){
-    removeAllChildren("containerId");
+    removeAllChildren(container.id);
     let labelName = new Element('label')
             .withText('Name:')
             .forId('idName')
@@ -29,11 +29,14 @@ function showAuth(container, onSuccess){
                 let pwd = id('idPwd').value;
                 // The method bellow is generated automatically by the server. The method is declared in lib.js
                 auth(name, pwd, obj => {
-                    id('output').innerHTML = obj;
-                    onSuccess();
+                    onSuccess(obj);
                 });
             }).get();
     container.appendChild(button);
 
-    simpleFormRow("IdTruc", "Un truc a dire : ", "text").insertIn(container);
+    // TODO PFR simpleFormRow("IdTruc", "Un truc a dire : ", "text").insertIn(container);
+}
+
+function redirectLogout(idContainer) {
+    removeAllChildren(idContainer);
 }

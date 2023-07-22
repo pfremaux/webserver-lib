@@ -7,10 +7,5 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Form {
     String jsMethodName();
 
-    Class<?> validator();
-
-    String validationMethod();
-
-    Class<?>[] parametersToValidate();
 
 }

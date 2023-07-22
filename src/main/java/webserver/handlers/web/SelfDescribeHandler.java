@@ -53,9 +53,11 @@ public class SelfDescribeHandler implements HttpHandler {
         builder.append("<p>");
         builder.append(doc.getDescription());
         builder.append("</p>");
+        builder.append("Body example:");
         builder.append("<p>");
         builder.append(doc.getBodyExample());
         builder.append("</p>");
+        builder.append("Response example:");
         builder.append("<p>");
         builder.append(doc.getResponseExample());
         builder.append("</p>");

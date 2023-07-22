@@ -1,6 +1,8 @@
 package webserver.generators;
 
 
+import java.util.List;
+
 public class JsGenerator {
 	private JsGenerator() {
 
@@ -34,12 +36,34 @@ public class JsGenerator {
 		// Authentication call...
 		return """
 				function auth(login, pass, fn) {
-					_auth(login, pass, obj => {
+					_auth(login, pass, strObj => {
+						let obj = JSON.parse(strObj);
 						ACCOUNT = {
-							token: obj.token
+							token: obj.token,
+							roles: obj.roles
 						};
 						return fn(obj);
 					});
+				}
+				
+				function hasRole(strRole) {
+					if (!ACCOUNT) {
+						return false;
+					}
+					if (!ACCOUNT.roles) {
+						return false;
+					}
+					for (let i in ACCOUNT.roles) {
+						if (ACCOUNT.roles[i] == strRole) {
+							return true;
+						}
+					}
+					return false;
+				}
+				
+				function logout(redirect) {
+					ACCOUNT = undefined;
+					redirect();
 				}
 				""";
 	}
@@ -93,9 +117,12 @@ public class JsGenerator {
 				.append(key)
 				.append(","));
 		if (doc.getParameters().isEmpty()) {
-			builder.append("{}");
+			//builder.append("{}");
 		} else {
 			builder.deleteCharAt(builder.length() - 1);
 		}
 	}
+
+
+
 }
