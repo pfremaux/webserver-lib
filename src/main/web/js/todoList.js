@@ -37,10 +37,6 @@ function append(...args) {
     }
 }
 
-function li(container, ) {
-
-}
-
 /** Stands for Simple Tag
 */
 function st(type, text) {
@@ -57,4 +53,23 @@ function dt(type, id, onClick) {
         tag.onclick = onClick;
     }
     return tag;
+}
+
+function Tag(name) {
+    this.tag = st(name);
+    function child(tag) {
+        this.tag.appendChild(tag);
+        return this;
+    }
+    function text(txt) {
+        this.tag.innerHTML = text;
+        return this;
+    }
+    function attr(k,v) {
+        this.tag[k] = v;
+        return this;
+    }
+    function get() {
+        return this.tag;
+    }
 }

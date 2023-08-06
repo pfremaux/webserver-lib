@@ -32,7 +32,7 @@ public class ConfigHandler {
     private ConfigHandler() {
     }
 
-    public static void processCommandLineParameters(Set<String> providedParameters, Map<String, String> parameters) throws IOException, NoSuchMethodException {
+    public static void processActionsInCommandLine(Set<String> providedParameters, Map<String, String> parameters) throws IOException {
         // If user passed the help key, just display help and leave.
         if (providedParameters.contains(CliParameterLoader.DEFAULT_HELP_KEY)) {
             System.out.println(parameters.get(CliParameterLoader.DEFAULT_HELP_KEY));
@@ -135,8 +135,8 @@ public class ConfigHandler {
         String login;
         while ((login = p.getProperty(getLoginKey(accountCounter))) != null) {
             accountCounter++;
-            String pwd = p.getProperty(getPasswordKey(accountCounter));
-            String roles = p.getProperty(getRolesKey(accountCounter));
+            final String pwd = p.getProperty(getPasswordKey(accountCounter));
+            final String roles = p.getProperty(getRolesKey(accountCounter));
             AccountsHandler.register(
                     login,
                     pwd,
