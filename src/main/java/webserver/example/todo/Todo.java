@@ -1,8 +1,13 @@
 package webserver.example.todo;
 
+import webserver.annotations.JsonField;
+
 public class Todo {
+    @JsonField
     private final long creationTimestamp;
+    @JsonField
     private final String text;
+    @JsonField
     private final boolean done;
 
     public Todo(long creationTimestamp, String text, boolean done) {

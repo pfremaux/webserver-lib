@@ -36,7 +36,7 @@ public class MyEndpoints {
     }
 
 
-    // DO NOT DO THAT IN PRODUCTION. IT'S JUST tp ease my life with databases for this example.
+    // DO NOT DO THAT IN PRODUCTION. IT'S JUST to ease my life with databases for this example.
     private static List<Todo> todos = new ArrayList<>();
 
     static {

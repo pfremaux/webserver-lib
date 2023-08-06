@@ -50,22 +50,82 @@ public class SelfDescribeHandler implements HttpHandler {
             builder.append(doc.getRole());
             builder.append("</h3>");
         }
-        builder.append("<p>");
-        builder.append(doc.getDescription());
-        builder.append("</p>");
-        builder.append("Body example:");
-        builder.append("<p>");
-        builder.append(doc.getBodyExample());
-        builder.append("</p>");
-        builder.append("Response example:");
-        builder.append("<p>");
-        builder.append(doc.getResponseExample());
-        builder.append("</p>");
+        if (doc.getDescription() != null && !doc.getDescription().equals("")) {
+            builder.append("<p>");
+            builder.append(doc.getDescription());
+            builder.append("</p>");
+        }
+        if (doc.getBodyExample() != null && !"".equals(doc.getBodyExample())) {
+            builder.append("<h4>Body example:</h4>");
+            builder.append("<p>");
+            builder.append(formatJson(doc.getBodyExample()));
+            builder.append("</p>");
+        }
+        if (doc.getResponseExample() != null && !"".equals(doc.getResponseExample())) {
+            builder.append("<h4>Response example:</h4>");
+            builder.append("<p>");
+            builder.append(formatJson(doc.getResponseExample()));
+            builder.append("</p>");
+        }
         builder.append("<br/>");
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         WebHandlerUtils.buildValidResponseAndClose(exchange, strContexts);
+    }
+
+    private String formatJson(String rawJson) {
+        if (rawJson == null || rawJson.equals("")) {
+            return "";
+        }
+        if (!rawJson.startsWith("{")) {
+            return rawJson;
+        }
+        final StringBuilder formattedJson = new StringBuilder();
+        int indentationCount = 0;
+        boolean inQuote = false;
+        char previousChar = 0;
+        for (char c : rawJson.toCharArray()) {
+            if (c == ',') {
+                formattedJson.append(c);
+                formattedJson.append("<br>");
+                indent(formattedJson, indentationCount);
+            } else if (c == '\'' && !inQuote && previousChar != '\\') {
+                inQuote = true;
+                formattedJson.append(c);
+            } else if (c == '\'' && inQuote && previousChar != '\\') {
+                inQuote = false;
+                formattedJson.append(c);
+            } else if (c == '{') {
+                indentationCount++;
+                formattedJson.append(c);
+                formattedJson.append("<br>");
+                indent(formattedJson, indentationCount);
+            } else if (c == '}') {
+                indentationCount--;
+                formattedJson.append("<br>");
+                indent(formattedJson, indentationCount);
+                formattedJson.append(c);
+            } else if (c == '[') {
+                formattedJson.append(c);
+                if (previousChar != ':') {
+                    indent(formattedJson, indentationCount);
+                }
+            } else if (c == ']') {
+                // indentationCount--;
+                formattedJson.append(c);
+            } else {
+                formattedJson.append(c);
+            }
+            previousChar = c;
+        }
+        return formattedJson.toString();
+    }
+
+    private void indent(StringBuilder builder, int count) {
+        for (int i = 0; i < count; i++) {
+            builder.append("&nbsp;&nbsp;&nbsp;&nbsp;");
+        }
     }
 }

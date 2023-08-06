@@ -109,7 +109,7 @@ public class ServerHandler {
             LogUtils.info("Initializing auth endpoint...");
             final String relativePathEndpoint = ServerProperties.KEY_AUTH_ENDPOINT.getValue().get();
             handlers.put(relativePathEndpoint, authenticationHandler);
-            final DocumentedEndpoint authEndpointDoc = new DocumentedEndpoint(null, "_auth", "POST", relativePathEndpoint, "Authenticate the caller.", "{ login:'login', pass:'pass'}", "{ token: 'token' }}", Map.of("login", "String", "pass", "String"), null);
+            final DocumentedEndpoint authEndpointDoc = new DocumentedEndpoint(null, "_auth", "POST", relativePathEndpoint, "Authenticate the caller.", "{ login:'login', pass:'pass'}", "{ token: 'token' }", Map.of("login", "String", "pass", "String"), null);
             endpointsDocs.add(authEndpointDoc);
             jsScript.append(JsGenerator.generateJsCall(authEndpointDoc));
             jsScript.append(JsGenerator.authSource());

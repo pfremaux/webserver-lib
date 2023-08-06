@@ -219,7 +219,7 @@ public class JsonMapper {
             }
             final String attributeName = declaredMethod.getName().substring(3).toLowerCase();
             if (!nameToField.contains(attributeName)) {
-                continue;
+                throw new IllegalArgumentException("Unexpected attribute name: %s in class %s. Did you forget to add @JsonField above the attribute declaration ?".formatted(attributeName, result.getName()));
             }
 
             Class<?> value = declaredMethod.getReturnType();
@@ -252,7 +252,7 @@ public class JsonMapper {
                 builder.append("]");
             } else {
                 if (value.isAssignableFrom(Number.class)
-                        || BASE_TYPES.contains(nameToField.getClass().getSimpleName())) {
+                        || BASE_TYPES.contains(value.getSimpleName())) {
                     builder.append(simpleName);
                 } else if (value.isAssignableFrom(String.class)) {
                     builder.append("\"String\"");

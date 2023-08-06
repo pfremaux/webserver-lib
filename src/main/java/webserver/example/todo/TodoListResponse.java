@@ -1,10 +1,11 @@
 package webserver.example.todo;
 
-import webserver.example.todo.Todo;
+import webserver.annotations.JsonField;
 
 import java.util.List;
 
 public class TodoListResponse {
+    @JsonField
     private final List<Todo> todoList;
 
     public TodoListResponse(List<Todo> todoList) {
