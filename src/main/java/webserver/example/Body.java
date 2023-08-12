@@ -2,7 +2,7 @@ package webserver.example;
 
 
 import webserver.annotations.JsonField;
-import webserver.annotations.validator.ValidationTrait;
+import webserver.validator.ValidationTrait;
 import webserver.handlers.web.ErrorReport;
 
 public class Body  implements ValidationTrait {

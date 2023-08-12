@@ -191,7 +191,9 @@ public class ServerHandler {
                     null);
             metaDataBuilder.addComponent(cmp);
         }
-        metaDataBuilder.addComponent(new MetadataComponent("id" + documentedEndpoint.getJavaMethodName() + "Submit", JsType.BUTTON, "Submit", "e => log(e)"));
+
+        // TODO PFR I'm afraid it's becoming a big spaghetti code by generating js. I should generate these JS on demand thanks to a CLI command
+        metaDataBuilder.addComponent(new MetadataComponent("id" + documentedEndpoint.getJavaMethodName() + "Submit", JsType.BUTTON, "Submit", "e => {log(e);log('" + documentedEndpoint.getHttpMethod() + " " + documentedEndpoint.getPath() + "');}"));
         metaDataBuilder.close();
         formGeneratorBuilder.append("new Form(\n");
         formGeneratorBuilder.append(metaDataBuilder.getCode());

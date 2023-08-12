@@ -16,20 +16,20 @@ public class CommandManager {
     @MdDoc(description = "Run a command line in the server.")
     @Role(value = "admin")
     public RunCommandResponse runCommand(RunCommandRequest runCommandRequest) {
-        String toolName = runCommandRequest.getToolName();
-        List<String> commandStrings = new ArrayList<>();
+        final String toolName = runCommandRequest.getToolName();
+        final List<String> commandStrings = new ArrayList<>();
         commandStrings.add(toolName);
         commandStrings.addAll(Arrays.asList(runCommandRequest.getParameters().split(" ")));
 
-        ProcessBuilder builder = new ProcessBuilder(commandStrings.toArray(new String[]{}));
+        final ProcessBuilder builder = new ProcessBuilder(commandStrings.toArray(new String[]{}));
         // TODO PFR3 handle more than 1 process
-        Process existingProcess = Singletons.get(Process.class);
+        final Process existingProcess = Singletons.get(Process.class);
         if (existingProcess.isAlive()) {
             return new RunCommandResponse(9, true);
         }
 
         try {
-            Process startedProcess = builder.start();
+            final Process startedProcess = builder.start();
             Singletons.register(startedProcess);
             //int status  = start.waitFor();
         } catch (IOException e) {

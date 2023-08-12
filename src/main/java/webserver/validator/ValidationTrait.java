@@ -1,4 +1,4 @@
-package webserver.annotations.validator;
+package webserver.validator;
 
 import webserver.handlers.web.ErrorReport;
 

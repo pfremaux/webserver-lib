@@ -10,12 +10,7 @@ import tools.security.SimpleSecretHandler;
 import webserver.annotations.Endpoint;
 import webserver.annotations.Form;
 import webserver.annotations.Role;
-import webserver.annotations.validator.Validator;
-import webserver.generators.js.JsType;
-import webserver.generators.js.MetaDataBuilder;
-import webserver.generators.js.MetadataComponent;
 import webserver.handlers.WebHandlerUtils;
-import webserver.handlers.web.ErrorReport;
 import webserver.handlers.web.auth.DefaultTokenFields;
 import webserver.handlers.web.auth.Token;
 import webserver.handlers.web.auth.TokenStructure;
@@ -25,7 +20,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
@@ -57,7 +51,6 @@ public class EndpointGenerator {
                 continue;
             }
             final Role requiredRole = declaredMethod.getDeclaredAnnotation(Role.class);
-            final Validator methodInputValidator = declaredMethod.getDeclaredAnnotation(Validator.class);
             // Gets the body instance
             final Optional<Parameter> bodyParameter = Stream.of(declaredMethod.getParameters())
                     .filter((Parameter p) -> !p.getType().equals(Map.class)).findFirst();
@@ -98,7 +91,6 @@ public class EndpointGenerator {
 
             final HttpHandler handler = mutableInputOutputObject -> {
                 final Map<String, List<String>> headers = new HashMap<>(mutableInputOutputObject.getRequestHeaders());
-                LogUtils.info("Entering enpoint");
                 if (requiredRole != null) {
                     LogUtils.info("Role required " + requiredRole + " ; headers = " + headers);
                     List<String> secValues = headers.get("Sec");
@@ -112,7 +104,7 @@ public class EndpointGenerator {
                         mutableInputOutputObject.getResponseBody().close();
                         return;
                     } else {
-                        LogUtils.info(secValues.get(0));
+                        LogUtils.info(secValues.get(0));//TODO PFR remove once valid
 
                     }
                     final String token = secValues.get(0);
@@ -141,14 +133,6 @@ public class EndpointGenerator {
                     final String data = new String(bytes, StandardCharsets.UTF_8);
                     if (bodyParameter.isPresent()) {
                         final Object b = JsonMapper.jsonToObject(new StringBuilder(data), bodyParameter.get().getType());
-                        if (methodInputValidator != null) {
-                            Method validationMethod = methodInputValidator.validator().getDeclaredMethod(methodInputValidator.validationMethod(), methodInputValidator.inputs());
-                            Object error = validationMethod.invoke(null, b);// TODO PFR c est plus des statics donc il faudra une instance d'object a appeler
-                            if (error != null) {
-                                WebHandlerUtils.prepareErrorResponse(mutableInputOutputObject, 400, (ErrorReport) error);
-                                return;
-                            }
-                        }
                         result = declaredMethod.invoke(instanceToProcess, headers, b);
                     } else {
                         result = declaredMethod.invoke(instanceToProcess, headers);
@@ -184,10 +168,6 @@ public class EndpointGenerator {
 
         return handlers;
     }
-
-
-    enum Error {};
-    record ResultPartialRequestHandled<T>(T resultData, ErrorReport  error){}
 
 
     private static void handleException(HttpExchange exchange, Throwable t) throws IOException {

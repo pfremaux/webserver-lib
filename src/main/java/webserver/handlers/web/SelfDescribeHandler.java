@@ -12,6 +12,16 @@ import java.util.List;
  * The goal of this handler is to generate a HTML page that describes all endpoints.
  */
 public class SelfDescribeHandler implements HttpHandler {
+private static String pattern = """
+<html>
+    <head>
+        <script src="web/js/helpers.js"></script>
+    </head>
+    <body>
+    %s
+    </body>
+</html>
+        """;
 
     private final String strContexts;
 
@@ -20,14 +30,13 @@ public class SelfDescribeHandler implements HttpHandler {
         final StringBuilder builder = new StringBuilder();
         for (DocumentedEndpoint doc : endpointsDoc) {
             prepareHtmlDisplay(builder, doc);
-
         }
-        this.strContexts = builder.toString();
+        this.strContexts = pattern.formatted(builder.toString());
     }
 
     private void prepareHtmlDisplay(StringBuilder builder, DocumentedEndpoint doc) {
         if (doc.getHttpMethod().equalsIgnoreCase("GET")) {
-            builder.append("<h1>");
+            builder.append("<h1  onclick=\"toggle(this)\">");// TODO PFR improve sinon ca cache le titre...
             builder.append("<a href=\"");
             builder.append(doc.getPath());
             builder.append("\">");
@@ -38,7 +47,8 @@ public class SelfDescribeHandler implements HttpHandler {
             builder.append("</a>");
             builder.append("</h1>");
         } else {
-            builder.append("<h1>");
+            builder.append("<h1 ");
+            builder.append(" onclick=\"toggle(this)\" >");
             builder.append(doc.getHttpMethod());
             builder.append(" ");
             builder.append(doc.getPath());
