@@ -14,9 +14,7 @@ public class Singletons {
         }
     }
 
-    ;
-
-    public record NumericConfig(String key, Integer value) implements Config {
+    public record NumericConfig(String key, Number value) implements Config {
         @Override
         public boolean isNumerical() {
             return true;

@@ -48,7 +48,7 @@ public class ServerHandler {
         // We need to process the config file FIRST and the command line after as some command line
         // might require some settings loaded in the config file.
         ConfigHandler.processConfigFile(providedParameters, parameters);
-        ConfigHandler.processCommandLineParameters(providedParameters, parameters);
+        ConfigHandler.processActionsInCommandLine(providedParameters, parameters);
 
         // These parameters shouldn't be defined in ServerProperties as it's related to passwords, it's a bit sensitive.
         final char[] ksPass = Optional.ofNullable(parameters.get("--ksPass")).map(String::toCharArray).orElse(null);
@@ -63,8 +63,8 @@ public class ServerHandler {
      */
     private static CliParameterLoader getCliParameterLoader() {
         return new CliParameterLoader(Map.of(), Map.of(//
-                "--ksPass", "The Java Key Store password. It's required if you passed a jks path.",//
-                "--tokenPass", "Password token. It's the symmetric key used to encrypted the session..",//
+                "--keystore-pwd", "The Java Key Store password. It's required if you passed a jks path.",//
+                "--token-pwd", "Password token. It's the symmetric key used to encrypted the session..",//
                 ConfigHandler.GENERATE_PROPERTIES_PARAM, "Generate a default properties file", //
                 ConfigHandler.CONFIG_FILE, ".properties file to customize/enable functionalities." //
         ),

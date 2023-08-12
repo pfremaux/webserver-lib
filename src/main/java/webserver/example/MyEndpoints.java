@@ -35,7 +35,6 @@ public class MyEndpoints {
         return new TestArray(List.of("aaa", "bbb"), List.of(3.1, 2.2), List.of(new Body("toto1"), new Body("toto2")));
     }
 
-
     // DO NOT DO THAT IN PRODUCTION. IT'S JUST to ease my life with databases for this example.
     private static List<Todo> todos = new ArrayList<>();
 
@@ -48,8 +47,6 @@ public class MyEndpoints {
     public TodoListResponse loadTodos(Map<String, List<String>> headers) {
         return new TodoListResponse(todos);
     }
-
-
 
 	@Endpoint(path = "/todos/create", method = "POST")
 	public EmptyBody createTodo(Map<String, List<String>> headers, TodoCreationRequest todo) {

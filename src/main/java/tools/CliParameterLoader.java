@@ -2,6 +2,7 @@ package tools;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class CliParameterLoader {
     public static final String DEFAULT_HELP_KEY = "-h";
@@ -47,6 +48,21 @@ public class CliParameterLoader {
         boolean expectsParameterName = true;
         String key = null;
         String value;
+
+        for (String parameterKey : mandatoryParameters.values()) {
+            final String environmentVariable = cliParameterToEnvironmentVariable(parameterKey);
+            Optional.ofNullable(System.getenv(environmentVariable)).ifPresent(envVarValue -> {
+                result.put(parameterKey, envVarValue);
+            });
+        }
+
+        for (String parameterKey : optionalParameters.values()) {
+            final String environmentVariable = cliParameterToEnvironmentVariable(parameterKey);
+            Optional.ofNullable(System.getenv(environmentVariable)).ifPresent(envVarValue -> {
+                result.put(parameterKey, envVarValue);
+            });
+        }
+
         for (String parameter : args) {
             if (expectsParameterName) {
                 key = parameter;
@@ -82,6 +98,13 @@ public class CliParameterLoader {
 
         result.put(DEFAULT_HELP_KEY, usage);
         return result;
+    }
+
+    private static String cliParameterToEnvironmentVariable(String cliParameter) {
+        if (cliParameter.startsWith("--")) {
+            return cliParameter.substring(2).replaceAll("-", "_").toUpperCase();
+        }
+        return "unsupported";
     }
 
 }
