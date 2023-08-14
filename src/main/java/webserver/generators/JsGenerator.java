@@ -116,13 +116,8 @@ public class JsGenerator {
 				.append("\":")
 				.append(key)
 				.append(","));
-		if (doc.getParameters().isEmpty()) {
-			//builder.append("{}");
-		} else {
+		if (!doc.getParameters().isEmpty()) {
 			builder.deleteCharAt(builder.length() - 1);
 		}
 	}
-
-
-
 }

@@ -14,6 +14,7 @@ import webserver.handlers.WebHandlerUtils;
 import webserver.handlers.web.auth.DefaultTokenFields;
 import webserver.handlers.web.auth.Token;
 import webserver.handlers.web.auth.TokenStructure;
+import webserver.validator.ValidationTrait;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -62,12 +63,14 @@ public class EndpointGenerator {
                                 + "(Map<String, List<String>> headers, Body body)");
             }*/
 
+            // Takes main information about a new endpoint: it's method and relative path.
             final String method = declaredAnnotation.method();
             final String path = declaredAnnotation.path();
             if (handlers.containsKey(path)) {
                 throw new IllegalArgumentException("Duplicate path: '%s' even if they have different HTTP method.".formatted(path));
             }
 
+            // Initial documentation of this new endpoint
             final DocumentedEndpoint documentedEndpoint = new DocumentedEndpoint();
             documentedEndpoint.setJavaMethodName(declaredMethod.getName());
             documentedEndpoint.setHttpMethod(method);
@@ -75,7 +78,7 @@ public class EndpointGenerator {
             documentedEndpoint.setRole(requiredRole == null ? null : requiredRole.value());
 
             try {
-                if (bodyParameter.isPresent()) {
+                    if (bodyParameter.isPresent()) {
                     final Class<?> bodyParameterType = bodyParameter.get().getType();
                     documentedEndpoint.setBodyExample(JsonMapper.objectToJsonExample(bodyParameterType).toString());
                     final Optional<Form> formAnnotation = Optional.ofNullable(bodyParameterType.getAnnotation(Form.class));
@@ -105,7 +108,6 @@ public class EndpointGenerator {
                         return;
                     } else {
                         LogUtils.info(secValues.get(0));//TODO PFR remove once valid
-
                     }
                     final String token = secValues.get(0);
                     final SimpleSecretHandler secretHandler = Singletons.get(SimpleSecretHandler.class);
@@ -121,7 +123,6 @@ public class EndpointGenerator {
                         e.printStackTrace();
                         throw new RuntimeException(e);
                     }
-
                 }
                 if (!WebHandlerUtils.validateHttpRequest(mutableInputOutputObject, method)) {// TODO PFR il peut y avoir confusion si on a 2 endpoints avec la meme url mais pas la meme method
                     return;
@@ -133,6 +134,12 @@ public class EndpointGenerator {
                     final String data = new String(bytes, StandardCharsets.UTF_8);
                     if (bodyParameter.isPresent()) {
                         final Object b = JsonMapper.jsonToObject(new StringBuilder(data), bodyParameter.get().getType());
+                        if (b == null) {
+                            LogUtils.warning("Unexpected null value when mapping Body request.");
+                        }
+                        if (b.getClass().isAssignableFrom(ValidationTrait.class)) {
+                            LogUtils.info("TODO PFR validate");
+                        }
                         result = declaredMethod.invoke(instanceToProcess, headers, b);
                     } else {
                         result = declaredMethod.invoke(instanceToProcess, headers);
@@ -153,8 +160,8 @@ public class EndpointGenerator {
             handlers.put(path, handler);
 
             if (bodyParameter.isPresent()) {
-                final Map<String, String> nameToTypeParamers = JsonMapper.objectToMapDescriptor(bodyParameter.get().getType());
-                documentedEndpoint.setParameters(nameToTypeParamers);
+                final Map<String, String> nameToTypeParameters = JsonMapper.objectToMapDescriptor(bodyParameter.get().getType());
+                documentedEndpoint.setParameters(nameToTypeParameters);
             }
 
             final MdDoc declaredDoc = declaredMethod.getDeclaredAnnotation(MdDoc.class);
