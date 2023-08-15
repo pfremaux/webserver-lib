@@ -38,7 +38,7 @@ public class ConfigHandler {
             System.out.println(parameters.get(CliParameterLoader.DEFAULT_HELP_KEY));
             SystemUtils.endOfApp();
         } else if (providedParameters.contains(GENERATE_PROPERTIES_PARAM)) {
-            StringBuilder builder = new StringBuilder();
+            final StringBuilder builder = new StringBuilder();
             for (ServerProperties serverProperty : ServerProperties.values()) {
                 if (serverProperty.getDescription() != null) {
                     builder.append("# ").append(serverProperty.getDescription()).append('\n');
@@ -102,7 +102,7 @@ public class ConfigHandler {
         } else if (ServerProperties.KEY_CONFIG_FILE_PATH.getValue().map(path -> Files.exists(Path.of(path))).orElse(false)) {
             // If no config file parameter is passed, we're taking the default path where we could find this file.
             final String configFile = ServerProperties.KEY_CONFIG_FILE_PATH.getValue().get();
-            LogUtils.info("Default config file found [%s]", configFile);
+            LogUtils.info("Loading default config file: [%s]", configFile);
             ConfigHandler.loadConfigFile(configFile);
         } else {
             // No config file found, we'll just rely on the default values.

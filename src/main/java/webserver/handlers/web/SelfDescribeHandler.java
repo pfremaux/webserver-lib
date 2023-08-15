@@ -36,7 +36,8 @@ private static String pattern = """
 
     private void prepareHtmlDisplay(StringBuilder builder, DocumentedEndpoint doc) {
         if (doc.getHttpMethod().equalsIgnoreCase("GET")) {
-            builder.append("<h1  onclick=\"toggle(this)\">");// TODO PFR improve sinon ca cache le titre...
+            //builder.append("<h1  onclick=\"toggle(this)\">");// TODO PFR improve sinon ca cache le titre...
+            builder.append("<h1>");
             builder.append("<a href=\"");
             builder.append(doc.getPath());
             builder.append("\">");

@@ -69,7 +69,7 @@ public class CliParameterLoader {
             if (expectsParameterName) {
                 key = parameter;
                 // Was key not found anywhere ?
-                if (!mandatoryParameters.containsKey(key) && !optionalParameters.containsKey(key)) {
+                if (!DEFAULT_HELP_KEY.equals(key) && !mandatoryParameters.containsKey(key) && !optionalParameters.containsKey(key)) {
                     SystemUtils.failUser("Unrecognized parameter : " + key);
                 }
             } else {
