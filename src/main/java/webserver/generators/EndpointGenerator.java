@@ -11,9 +11,12 @@ import webserver.annotations.Endpoint;
 import webserver.annotations.Form;
 import webserver.annotations.Role;
 import webserver.handlers.WebHandlerUtils;
+import webserver.handlers.web.BaseError;
+import webserver.handlers.web.ErrorReport;
 import webserver.handlers.web.auth.DefaultTokenFields;
 import webserver.handlers.web.auth.Token;
 import webserver.handlers.web.auth.TokenStructure;
+import webserver.validator.ValidationTrait;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -43,7 +46,7 @@ public class EndpointGenerator {
 
     private static Map<String, HttpHandler> extractEndpointsFromClasses(Object instanceToProcess, List<Consumer<DocumentedEndpoint>> addons, Map<String, HttpHandler> handlers) {
         final Class<?> class1 = instanceToProcess.getClass();
-        final StringBuilder formGeneratorBuilder = new StringBuilder();
+        final StringBuilder formGeneratorBuilder = new StringBuilder();// TODO PFR work on it once I'm on JS generation
         // Look for all endpoint and process all methods annotated @Endpoint
         for (Method declaredMethod : class1.getDeclaredMethods()) {
             final Endpoint declaredAnnotation = declaredMethod.getDeclaredAnnotation(Endpoint.class);
@@ -54,13 +57,6 @@ public class EndpointGenerator {
             // Gets the body instance
             final Optional<Parameter> bodyParameter = Stream.of(declaredMethod.getParameters())
                     .filter((Parameter p) -> !p.getType().equals(Map.class)).findFirst();
-
-            // TODO allow no body.
-            /*if (bodyParameter == null) {
-                throw new NullPointerException(
-                        "body attribute is null for method '" + declaredMethod.getName() + "'. All method annotated with @Endpoint should have 2 parameters :"
-                                + "(Map<String, List<String>> headers, Body body)");
-            }*/
 
             final String method = declaredAnnotation.method();
             final String path = declaredAnnotation.path();
@@ -78,11 +74,9 @@ public class EndpointGenerator {
                 if (bodyParameter.isPresent()) {
                     final Class<?> bodyParameterType = bodyParameter.get().getType();
                     documentedEndpoint.setBodyExample(JsonMapper.objectToJsonExample(bodyParameterType).toString());
+                    documentedEndpoint.setBodyType(bodyParameterType);
                     final Optional<Form> formAnnotation = Optional.ofNullable(bodyParameterType.getAnnotation(Form.class));
-                    if (formAnnotation.isPresent()) {
-                        documentedEndpoint.setHasForm(true);
-                        documentedEndpoint.setBodyType(bodyParameterType);//TODO PFR can be merged with parameter setter above
-                    }
+                    documentedEndpoint.setHasForm(formAnnotation.isPresent());
                 }
                 documentedEndpoint.setResponseExample(JsonMapper.objectToJsonExample(declaredMethod.getReturnType()).toString());
             } catch (ClassNotFoundException e1) {
@@ -132,7 +126,21 @@ public class EndpointGenerator {
                 try {
                     final String data = new String(bytes, StandardCharsets.UTF_8);
                     if (bodyParameter.isPresent()) {
-                        final Object b = JsonMapper.jsonToObject(new StringBuilder(data), bodyParameter.get().getType());
+                        Class<?> bodyParameterType = bodyParameter.get().getType();
+                        final Object b = JsonMapper.jsonToObject(new StringBuilder(data), bodyParameterType);
+                        if (b == null) {
+                            WebHandlerUtils.prepareErrorResponse(mutableInputOutputObject, 400, BaseError.MISSING_BODY);
+                            return;
+                        }
+                        if (bodyParameterType.isAssignableFrom(ValidationTrait.class)) {
+                            ValidationTrait validator = (ValidationTrait) b;
+                            final Optional<ErrorReport> errorReport = validator.validate();// TODO PFR handle null?
+                            if (errorReport.isPresent()) {
+                                WebHandlerUtils.prepareErrorResponse(mutableInputOutputObject, 400, errorReport.get());
+                                return;
+                            }
+                        }
+
                         result = declaredMethod.invoke(instanceToProcess, headers, b);
                     } else {
                         result = declaredMethod.invoke(instanceToProcess, headers);
@@ -153,8 +161,8 @@ public class EndpointGenerator {
             handlers.put(path, handler);
 
             if (bodyParameter.isPresent()) {
-                final Map<String, String> nameToTypeParamers = JsonMapper.objectToMapDescriptor(bodyParameter.get().getType());
-                documentedEndpoint.setParameters(nameToTypeParamers);
+                final Map<String, String> nameToTypeParameters = JsonMapper.objectToMapDescriptor(bodyParameter.get().getType());
+                documentedEndpoint.setParameters(nameToTypeParameters);
             }
 
             final MdDoc declaredDoc = declaredMethod.getDeclaredAnnotation(MdDoc.class);

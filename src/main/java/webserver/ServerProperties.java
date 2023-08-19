@@ -20,10 +20,6 @@ public enum ServerProperties {
 
 
     // SECURITY
-  /*  KEY_TOKEN_PASSWORD(
-            "token.password",
-            "CHANGEME",
-            "Passowrd token. It's the symmetric key used to encrypted the session."),*/
     AUTH_ACCOUNTS(
             "server.auth.accounts",
             "admin:",
@@ -33,10 +29,6 @@ public enum ServerProperties {
             "server.key.store.path",
             null,
             "Path where the server can find the Java Key Store. This parameter is necessary if you want to enable HTTPS."),
-    PASSWORD_KEY_STORE(
-            "server.key.store.pwd",
-            null,
-            "Password of the Java Key Store. This parameter is necessary if you want to enable HTTPS."),
 
     // ENDPOINTS SETTINGS
     KEY_STATIC_FILES_ENDPOINT_RELATIVE_PATH(
@@ -48,6 +40,12 @@ public enum ServerProperties {
             "server.handler.static.files.base.directory",
             "./src/main/web",
             "Local path where the server should look for returning static files."),
+    KEY_STATIC_FILES_ALLOW_EXPLORATION(
+            "server.handler.static.files.exploration.enabled",
+            "false",
+            "Allow caller to explore directories by adding slash star at the end of the URL. i.e. http://<url>/*"
+    ),
+
     KEY_SELF_DESCRIBE_ENDPOINT(
             "server.handler.self.describe.endpoint",
             "/self-describe",
@@ -60,7 +58,6 @@ public enum ServerProperties {
             "server.handler.video.files.base.directory",
             null,
             "Local path where the server should look for to stream videos."),
-
 
     KEY_CONFIG_FILE_PATH(
             "server.config.file",

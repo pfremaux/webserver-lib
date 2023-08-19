@@ -32,6 +32,10 @@ import java.util.stream.Stream;
 
 @MdDoc(description = "Entry point for the application that's using a webserver. You need to call the static method runServer(..).")
 public class ServerHandler {
+
+    public static final String KEYSTORE_PWD = "--keystore-pwd";
+    public static final String SESSION_TOKEN_PWD = "--token-pwd";
+
     private ServerHandler() {
     }
 
@@ -51,8 +55,8 @@ public class ServerHandler {
         ConfigHandler.processActionsInCommandLine(providedParameters, parameters);
 
         // These parameters shouldn't be defined in ServerProperties as it's related to passwords, it's a bit sensitive.
-        final char[] ksPass = Optional.ofNullable(parameters.get("--ksPass")).map(String::toCharArray).orElse(null);
-        final char[] tokenPass = parameters.getOrDefault("--tokenPass", "CHANGEME").toCharArray();
+        final char[] ksPass = Optional.ofNullable(parameters.get(KEYSTORE_PWD)).map(String::toCharArray).orElse(null);
+        final char[] tokenPass = parameters.getOrDefault(SESSION_TOKEN_PWD, "CHANGEME").toCharArray();
         startWebServer(ksPass, tokenPass, authenticationHandler);
     }
 
@@ -63,8 +67,8 @@ public class ServerHandler {
      */
     private static CliParameterLoader getCliParameterLoader() {
         return new CliParameterLoader(Map.of(), Map.of(//
-                "--keystore-pwd", "The Java Key Store password. It's required if you passed a jks path.",//
-                "--token-pwd", "Password token. It's the symmetric key used to encrypted the session..",//
+                KEYSTORE_PWD, "The Java Key Store password. It's required if you passed a jks path.",//
+                SESSION_TOKEN_PWD, "Password token. It's the symmetric key used to encrypted the session..",//
                 ConfigHandler.GENERATE_PROPERTIES_PARAM, "Generate a default properties file", //
                 ConfigHandler.CONFIG_FILE, ".properties file to customize/enable functionalities." //
         ),
@@ -102,7 +106,7 @@ public class ServerHandler {
                 List.of(endpointsDocs::add,
                         doc -> jsScript.append(JsGenerator.generateJsCall(doc)),
                         doc -> jsScript.append(generateFormCreationInJs(doc)),
-                        doc -> LogUtils.info("Documenting generated endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
+                        doc -> LogUtils.debug("Documenting generated endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
 
         // If the auth endpoint has been set up then register it and expose it.
         if (ServerProperties.KEY_AUTH_ENDPOINT.getValue().isPresent()) {
