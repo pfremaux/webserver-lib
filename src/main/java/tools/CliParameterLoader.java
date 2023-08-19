@@ -52,6 +52,7 @@ public class CliParameterLoader {
         for (String parameterKey : mandatoryParameters.values()) {
             final String environmentVariable = cliParameterToEnvironmentVariable(parameterKey);
             Optional.ofNullable(System.getenv(environmentVariable)).ifPresent(envVarValue -> {
+                LogUtils.info("Found env variable %s", environmentVariable);
                 result.put(parameterKey, envVarValue);
             });
         }
@@ -59,6 +60,7 @@ public class CliParameterLoader {
         for (String parameterKey : optionalParameters.values()) {
             final String environmentVariable = cliParameterToEnvironmentVariable(parameterKey);
             Optional.ofNullable(System.getenv(environmentVariable)).ifPresent(envVarValue -> {
+                LogUtils.info("Found env variable %s", environmentVariable);
                 result.put(parameterKey, envVarValue);
             });
         }
@@ -67,14 +69,13 @@ public class CliParameterLoader {
             if (expectsParameterName) {
                 key = parameter;
                 // Was key not found anywhere ?
-                if (!mandatoryParameters.containsKey(key) && !optionalParameters.containsKey(key)) {
-                    SystemUtils.failUser("Unrecognized Key passed in parameter : " + key);
+                if (!DEFAULT_HELP_KEY.equals(key) && !mandatoryParameters.containsKey(key) && !optionalParameters.containsKey(key)) {
+                    SystemUtils.failUser("Unrecognized parameter : " + key);
                 }
             } else {
                 value = parameter;
                 result.put(key, value);
             }
-
             expectsParameterName = !expectsParameterName;
         }
 

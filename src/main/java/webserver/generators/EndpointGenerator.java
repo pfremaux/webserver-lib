@@ -13,6 +13,7 @@ import webserver.annotations.Role;
 import webserver.handlers.WebHandlerUtils;
 import webserver.handlers.web.BaseError;
 import webserver.handlers.web.ErrorReport;
+import webserver.handlers.web.ErrorReport;
 import webserver.handlers.web.auth.DefaultTokenFields;
 import webserver.handlers.web.auth.Token;
 import webserver.handlers.web.auth.TokenStructure;
@@ -85,6 +86,7 @@ public class EndpointGenerator {
 
             final HttpHandler handler = mutableInputOutputObject -> {
                 final Map<String, List<String>> headers = new HashMap<>(mutableInputOutputObject.getRequestHeaders());
+                // VALIDATE ROLE
                 if (requiredRole != null) {
                     LogUtils.info("Role required " + requiredRole + " ; headers = " + headers);
                     List<String> secValues = headers.get("Sec");
@@ -99,7 +101,6 @@ public class EndpointGenerator {
                         return;
                     } else {
                         LogUtils.info(secValues.get(0));//TODO PFR remove once valid
-
                     }
                     final String token = secValues.get(0);
                     final SimpleSecretHandler secretHandler = Singletons.get(SimpleSecretHandler.class);
@@ -115,12 +116,13 @@ public class EndpointGenerator {
                         e.printStackTrace();
                         throw new RuntimeException(e);
                     }
-
                 }
+
                 if (!WebHandlerUtils.validateHttpRequest(mutableInputOutputObject, method)) {// TODO PFR il peut y avoir confusion si on a 2 endpoints avec la meme url mais pas la meme method
                     return;
                 }
 
+                // EXTRACT REQUEST BODY AND PROCESS
                 final byte[] bytes = mutableInputOutputObject.getRequestBody().readAllBytes();
                 final Object result;
                 try {
@@ -150,6 +152,7 @@ public class EndpointGenerator {
                     return;
                 }
 
+                // PROCESS RESPONSE
                 final String responseText = result == null ? "{}" : JsonMapper.objectToJson(result).toString();
                 mutableInputOutputObject.sendResponseHeaders(200, responseText.length());
 
@@ -160,11 +163,32 @@ public class EndpointGenerator {
             };
             handlers.put(path, handler);
 
+            // PROCESS DOCUMENTATION
+            // Initial documentation of this new endpoint
+            final DocumentedEndpoint documentedEndpoint = new DocumentedEndpoint();
+            documentedEndpoint.setJavaMethodName(declaredMethod.getName());
+            documentedEndpoint.setHttpMethod(method);
+            documentedEndpoint.setPath(path);
+            documentedEndpoint.setRole(requiredRole == null ? null : requiredRole.value());
+
+            try {
+                if (bodyParameter.isPresent()) {
+                    final Class<?> bodyParameterType = bodyParameter.get().getType();
+                    documentedEndpoint.setBodyExample(JsonMapper.objectToJsonExample(bodyParameterType).toString());
+                    final Optional<Form> formAnnotation = Optional.ofNullable(bodyParameterType.getAnnotation(Form.class));
+                    if (formAnnotation.isPresent()) {
+                        documentedEndpoint.setHasForm(true);
+                        documentedEndpoint.setBodyType(bodyParameterType);//TODO PFR can be merged with parameter setter above
+                    }
+                }
+                documentedEndpoint.setResponseExample(JsonMapper.objectToJsonExample(declaredMethod.getReturnType()).toString());
+            } catch (ClassNotFoundException e1) {
+                throw new IllegalStateException("Endpoint creation failed.", e1);
+            }
             if (bodyParameter.isPresent()) {
                 final Map<String, String> nameToTypeParameters = JsonMapper.objectToMapDescriptor(bodyParameter.get().getType());
                 documentedEndpoint.setParameters(nameToTypeParameters);
             }
-
             final MdDoc declaredDoc = declaredMethod.getDeclaredAnnotation(MdDoc.class);
             if (declaredDoc != null) {
                 documentedEndpoint.setDescription(Objects.requireNonNullElse(declaredDoc.description(), ""));
@@ -175,6 +199,30 @@ public class EndpointGenerator {
         }
 
         return handlers;
+    }
+
+    private static boolean validateStepAndDecideIfStop(LambdaStep lambdaStep, HttpExchange exchange, int httpCode) {
+        try {
+            if (lambdaStep.errorReport != null) {
+                WebHandlerUtils.prepareErrorResponse(exchange, httpCode, lambdaStep.errorReport);
+                return true;
+            } else if (lambdaStep.exception != null) {
+                LogUtils.error(lambdaStep.exception.getLocalizedMessage());
+                WebHandlerUtils.buildValidResponseAndClose(exchange, lambdaStep.exception.getLocalizedMessage());
+                return true;
+            } else {
+                return lambdaStep.leave;
+            }
+        } catch (IOException e) {
+            LogUtils.error(e.getLocalizedMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    private class LambdaStep {
+        private Exception exception;
+        private ErrorReport errorReport;
+        private boolean leave;
     }
 
 

@@ -52,7 +52,6 @@ public class LogUtils {
 
     private static Logger initLogs(String appName) {
         if (logger == null) {
-
             logger = Logger.getLogger(appName);
             if (ServerProperties.LOG_FILE.getValue().isEmpty()) {
                 ConsoleHandler handler = new ConsoleHandler();
@@ -64,23 +63,26 @@ public class LogUtils {
                 Handler[] handlers = logger.getHandlers();
                 System.out.println("existing handler : " + handlers.length);
                 handler.setFormatter(newFormatter);
-                handler.setLevel(Level.parse(ServerProperties.LOG_LEVEL.getValue().orElseThrow().toUpperCase()));
+                final Level logLevel = Level.parse(ServerProperties.LOG_LEVEL.getValue().orElseThrow().toUpperCase());
+                // Seems necessary to set the log level on the handler AND logger.
+                handler.setLevel(logLevel);
                 logger.addHandler(handler);
+                logger.setLevel(logLevel);
             } else {
                 FileHandler fh;
                 try {
                     fh = new FileHandler(ServerProperties.LOG_FILE.getValue().get(), 100, 10);
                     fh.setFormatter(getNewInstanceFormatter());
-                    fh.setLevel(Level.FINE);
+                    final Level logLevel = Level.parse(ServerProperties.LOG_LEVEL.getValue().orElseThrow().toUpperCase());
+                    fh.setLevel(logLevel);
                     // VERY IMPORTANT otherwise we will have logs twice (with a default handler)
                     logger.setUseParentHandlers(false);
-
+                    logger.setLevel(logLevel);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
-
         return logger;
     }
 
