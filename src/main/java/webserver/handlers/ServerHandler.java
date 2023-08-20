@@ -5,7 +5,7 @@ import tools.*;
 import tools.security.SimpleSecretHandler;
 import webserver.ServerProperties;
 import webserver.generators.DocumentedEndpoint;
-import webserver.generators.EndpointGenerator;
+import webserver.generators.endpoint.EndpointGenerator;
 import webserver.generators.JsGenerator;
 import webserver.generators.js.JsType;
 import webserver.generators.js.MetaDataBuilder;
