@@ -65,25 +65,6 @@ public class EndpointGenerator {
                 throw new IllegalArgumentException("Duplicate path: '%s' even if they have different HTTP method.".formatted(path));
             }
 
-            final DocumentedEndpoint documentedEndpoint = new DocumentedEndpoint();
-            documentedEndpoint.setJavaMethodName(declaredMethod.getName());
-            documentedEndpoint.setHttpMethod(method);
-            documentedEndpoint.setPath(path);
-            documentedEndpoint.setRole(requiredRole == null ? null : requiredRole.value());
-
-            try {
-                if (bodyParameter.isPresent()) {
-                    final Class<?> bodyParameterType = bodyParameter.get().getType();
-                    documentedEndpoint.setBodyExample(JsonMapper.objectToJsonExample(bodyParameterType).toString());
-                    documentedEndpoint.setBodyType(bodyParameterType);
-                    final Optional<Form> formAnnotation = Optional.ofNullable(bodyParameterType.getAnnotation(Form.class));
-                    documentedEndpoint.setHasForm(formAnnotation.isPresent());
-                }
-                documentedEndpoint.setResponseExample(JsonMapper.objectToJsonExample(declaredMethod.getReturnType()).toString());
-            } catch (ClassNotFoundException e1) {
-                throw new IllegalStateException("Endpoint creation failed.", e1);
-            }
-
             final HttpHandler handler = mutableInputOutputObject -> {
                 final Map<String, List<String>> headers = new HashMap<>(mutableInputOutputObject.getRequestHeaders());
                 // VALIDATE ROLE
@@ -170,6 +151,20 @@ public class EndpointGenerator {
             documentedEndpoint.setHttpMethod(method);
             documentedEndpoint.setPath(path);
             documentedEndpoint.setRole(requiredRole == null ? null : requiredRole.value());
+
+            try {
+                if (bodyParameter.isPresent()) {
+                    final Class<?> bodyParameterType = bodyParameter.get().getType();
+                    documentedEndpoint.setBodyExample(JsonMapper.objectToJsonExample(bodyParameterType).toString());
+                    documentedEndpoint.setBodyType(bodyParameterType);
+                    final Optional<Form> formAnnotation = Optional.ofNullable(bodyParameterType.getAnnotation(Form.class));
+                    documentedEndpoint.setHasForm(formAnnotation.isPresent());
+                }
+                documentedEndpoint.setResponseExample(JsonMapper.objectToJsonExample(declaredMethod.getReturnType()).toString());
+            } catch (ClassNotFoundException e1) {
+                throw new IllegalStateException("Endpoint creation failed.", e1);
+            }
+
 
             try {
                 if (bodyParameter.isPresent()) {
