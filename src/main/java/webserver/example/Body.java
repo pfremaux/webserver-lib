@@ -5,6 +5,8 @@ import webserver.annotations.JsonField;
 import webserver.validator.ValidationTrait;
 import webserver.handlers.web.ErrorReport;
 
+import java.util.Optional;
+
 public class Body  implements ValidationTrait {
 /*
 TODO PFR En raison de l approche KISS pour ce projet, on va peut etre eviter une anotation @Validate sur chaque endpoint et simplement utiliser une interface ValidationTrait
@@ -22,12 +24,12 @@ TODO PFR En raison de l approche KISS pour ce projet, on va peut etre eviter une
     }
 
     @Override
-    public ErrorReport validate() {
+    public Optional<ErrorReport> validate() {
         if (this.toto.toLowerCase().startsWith("toto")) {
-            return null;
+            return Optional.empty();
         }
 
-        return ExampleError.BAD_TOTO;
+        return Optional.of(ExampleError.BAD_TOTO);
     }
 
     public String getToto() {

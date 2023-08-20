@@ -135,8 +135,6 @@ private static String pattern = """
     }
 
     private void indent(StringBuilder builder, int count) {
-        for (int i = 0; i < count; i++) {
-            builder.append("&nbsp;&nbsp;&nbsp;&nbsp;");
-        }
+        builder.append("&nbsp;&nbsp;&nbsp;&nbsp;".repeat(Math.max(0, count)));
     }
 }
