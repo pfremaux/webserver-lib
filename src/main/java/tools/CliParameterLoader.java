@@ -45,10 +45,6 @@ public class CliParameterLoader {
 
     public Map<String, String> load(String[] args) {
         final Map<String, String> result = new HashMap<>();
-        boolean expectsParameterName = true;
-        String key = null;
-        String value;
-
         for (String parameterKey : mandatoryParameters.values()) {
             final String environmentVariable = cliParameterToEnvironmentVariable(parameterKey);
             Optional.ofNullable(System.getenv(environmentVariable)).ifPresent(envVarValue -> {
@@ -65,6 +61,8 @@ public class CliParameterLoader {
             });
         }
 
+        String key = null;
+        boolean expectsParameterName = true;
         for (String parameter : args) {
             if (expectsParameterName) {
                 key = parameter;
@@ -73,8 +71,7 @@ public class CliParameterLoader {
                     SystemUtils.failUser("Unrecognized parameter : " + key);
                 }
             } else {
-                value = parameter;
-                result.put(key, value);
+                result.put(key, parameter);
             }
             expectsParameterName = !expectsParameterName;
         }
