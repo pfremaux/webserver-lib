@@ -170,10 +170,9 @@ public class ServerHandler {
         LogUtils.info("Create thread pool with a capacity of %d...", threadCount);
         server.setExecutor(Executors.newFixedThreadPool(threadCount));
 
-        // TODO PFR parametrer video streaming
-        handlers.put("watch", new VideoStreamingHandler());
-
-
+        if (ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().isPresent()) {
+            handlers.put(ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().get(), new VideoStreamingHandler());
+        }
 
         handlers.entrySet().stream()
                 .peek(entry -> LogUtils.info("Loading handler %s...", entry.getKey()))

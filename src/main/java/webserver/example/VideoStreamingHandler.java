@@ -14,22 +14,18 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 public class VideoStreamingHandler implements HttpHandler {
 
     private static final int BUFFER_SIZE = 4096;
-
-    private static final Logger logger = LogUtils.initLogs();
 
     private final Path baseDir;
     private final String endpointRelativePath;
 
     public VideoStreamingHandler() {
         final String absolutePath = ServerProperties.KEY_STATIC_FILES_BASE_DIRECTORY.getValue().orElseThrow();
-        final String endpointRelativePath = ServerProperties.KEY_STATIC_FILES_ENDPOINT_RELATIVE_PATH.getValue().orElseThrow();
         this.baseDir = Path.of(absolutePath);
-        this.endpointRelativePath = endpointRelativePath;
+        this.endpointRelativePath = ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().get();
     }
 
     @Override
@@ -39,7 +35,7 @@ public class VideoStreamingHandler implements HttpHandler {
         int startingPointer = 0;
         int endingPointer = -1;
         if (rangeValues != null) {
-            logger.warning(String.format("Range: %s", rangeValues.get(0)));
+            LogUtils.debug(String.format("Range: %s", rangeValues.get(0)));
             String rangeParameters = rangeValues.get(0).substring("bytes=".length());
             String strStartingPointer = rangeParameters.substring(0, rangeParameters.indexOf("-"));
             startingPointer = Integer.parseInt(strStartingPointer);
@@ -48,17 +44,17 @@ public class VideoStreamingHandler implements HttpHandler {
                     .orElse(startingPointer + BUFFER_SIZE * 100);
         } else {
             for (Map.Entry<String, List<String>> entry : exchange.getRequestHeaders().entrySet()) {
-                logger.warning(entry.getKey() + " -> " + entry.getValue());
+                LogUtils.debug(entry.getKey() + " -> " + entry.getValue());
             }
         }
 
-        logger.warning("Requested URI : " + requestURI.getPath());
+        LogUtils.debug("Requested URI : " + requestURI.getPath());
         final String relativeFilePath = requestURI.toString().substring(endpointRelativePath.length());
         final String filePath = (baseDir.toFile().getAbsolutePath() + relativeFilePath).replaceAll("%20", " ");
         final File file = new File(filePath);
-        logger.warning("Following file requested : " + file.getAbsolutePath());
+        LogUtils.debug("Following file requested : " + file.getAbsolutePath());
         if (file.exists()) {
-            logger.warning("File found !");
+            LogUtils.debug("File found !");
             if (endingPointer > 0) {
                 supportFileChunk(exchange, file, startingPointer, endingPointer);
             } else {
@@ -68,7 +64,7 @@ public class VideoStreamingHandler implements HttpHandler {
             return;
 
         }
-        logger.warning("File not found :(");
+        LogUtils.warning("File not found :(");
         exchange.sendResponseHeaders(400, 0);
         exchange.getResponseBody().close();
     }
@@ -112,11 +108,10 @@ public class VideoStreamingHandler implements HttpHandler {
         exchange.sendResponseHeaders(finalChunk ? 200 : 206, realEndingPointer - startingPointer);
 
         final OutputStream os = exchange.getResponseBody();
-        int bytesRead = 0;
-        byte[] buffer = new byte[BUFFER_SIZE];
-
 
         try {
+            int bytesRead = 0;
+            byte[] buffer = new byte[BUFFER_SIZE];
             int remainingBytesToRead = realEndingPointer - startingPointer;
             int i = 0;
             in.skip(startingPointer);
@@ -127,8 +122,7 @@ public class VideoStreamingHandler implements HttpHandler {
             os.flush();
         } catch (Throwable t) {
             t.printStackTrace();
-            System.err.println(t);
-            logger.throwing(VideoStreamingHandler.class.getSimpleName(), "supportFileChunk", t);
+            LogUtils.error(VideoStreamingHandler.class.getSimpleName() + " - supportFileChunk");
         }
 
         os.close();
