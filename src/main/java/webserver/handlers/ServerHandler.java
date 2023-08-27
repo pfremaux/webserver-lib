@@ -4,6 +4,7 @@ import com.sun.net.httpserver.*;
 import tools.*;
 import tools.security.SimpleSecretHandler;
 import webserver.ServerProperties;
+import webserver.example.VideoStreamingHandler;
 import webserver.generators.DocumentedEndpoint;
 import webserver.generators.endpoint.EndpointGenerator;
 import webserver.generators.JsGenerator;
@@ -168,6 +169,12 @@ public class ServerHandler {
 
         LogUtils.info("Create thread pool with a capacity of %d...", threadCount);
         server.setExecutor(Executors.newFixedThreadPool(threadCount));
+
+        // TODO PFR parametrer video streaming
+        handlers.put("watch", new VideoStreamingHandler());
+
+
+
         handlers.entrySet().stream()
                 .peek(entry -> LogUtils.info("Loading handler %s...", entry.getKey()))
                 .forEach(entry -> server.createContext(entry.getKey(), entry.getValue()));
