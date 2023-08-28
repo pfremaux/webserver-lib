@@ -54,6 +54,12 @@ public enum ServerProperties {
             "server.handler.auth.endpoint",
             "/auth",
             "Endpoint path the client should call to authenticate. For example: /authenticate"),
+
+    KEY_STREAM_VIDEO_ENDPOINT(
+            "server.handler.video.stream.endpoint",
+            "/watch",
+            "Endpoint path the client should call to watch long videos. Servers can't stream big files without a dedicated handler For example: /watch"),
+
     KEY_VIDEO_FILES_BASE_DIRECTORY(
             "server.handler.video.files.base.directory",
             null,

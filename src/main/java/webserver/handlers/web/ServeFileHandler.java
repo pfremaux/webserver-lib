@@ -81,7 +81,12 @@ public class ServeFileHandler implements HttpHandler {
     private String formatFilesHtml(String relativeFilePath, File[] files) {
         final StringBuilder builder = new StringBuilder();
         builder.append("<html>");
+        builder.append("<head>");
+        builder.append("<meta http-equiv=\"Content-Security-Policy\" content=\"upgrade-insecure-requests\">");
+        builder.append("</head>");
+
         builder.append("<body>");
+        addUtilityFunctions(builder);
         builder.append("<ul>");
         builder.append("<li><a href=\"");
         builder.append(endpointRelativePath);
@@ -104,7 +109,7 @@ public class ServeFileHandler implements HttpHandler {
             builder.append(file.getName());
             builder.append("</a>");
 
-            handleVideo(builder, file, fileURL);
+            handleVideoV2(builder, file, fileURL);
 
             builder.append("</li>");
         }
@@ -124,11 +129,56 @@ public class ServeFileHandler implements HttpHandler {
             builder.append("<video id=\"");
             builder.append(file.getName());
             builder.append(".id");
-            builder.append("\" ");
+            builder.append("\" displaysinline ");
             builder.append("src=\"");
-            builder.append(fileURL);
+            // builder.append(fileURL);
+            builder.append(fileURL.replace("/web/", "/watch/"));
             builder.append("\" style=\"display:none\"");
             builder.append("></video>");
+        }
+    }
+
+    private void addUtilityFunctions(StringBuilder builder) {
+        builder.append("<script>");
+        builder.append(  """
+function insertVideo(id, url) {
+    let videoTag = document.createElement('video');
+    videoTag.id = id+".id";
+    videoTag.playsinline = "";
+    videoTag.autoplay="autoplay";
+     videoTag.muted="muted";
+      videoTag.loop="loop";
+      videoTag.style.width="640px";
+      videoTag.style.height="480px";
+    videoTag.src = url;
+    document.getElementById(id).appendChild(videoTag);
+    
+     let buttonTag = document.createElement('button');
+     buttonTag.onclick = e => removeAllChildren(id);
+     buttonTag.innerHTML = 'X';
+     document.getElementById(id).appendChild(buttonTag);
+}
+
+function removeAllChildren(i) {
+	const myNode = document.getElementById(i);
+	while (myNode.lastElementChild) {
+		myNode.removeChild(myNode.lastElementChild);
+	}
+}
+""");
+        builder.append("</script>");
+    }
+
+    private void handleVideoV2(StringBuilder builder, File file, String fileURL) {
+        if (file.getName().endsWith(".mp4")) {
+            final String id = file.getName().trim() + ".id";
+            builder.append("<div id=\"%s\">".formatted(id));
+            final String urlToWatch = fileURL.replace("/web/", "/watch/");
+            builder.append("<a href=\"#\" onclick=\"");
+            builder.append("insertVideo('%s', '%s')".formatted(id, urlToWatch));
+            builder.append("\"> show");
+            builder.append("</a>");
+            builder.append("</div>");
         }
     }
 }

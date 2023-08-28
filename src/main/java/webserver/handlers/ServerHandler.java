@@ -4,8 +4,9 @@ import com.sun.net.httpserver.*;
 import tools.*;
 import tools.security.SimpleSecretHandler;
 import webserver.ServerProperties;
+import webserver.example.VideoStreamingHandler;
 import webserver.generators.DocumentedEndpoint;
-import webserver.generators.EndpointGenerator;
+import webserver.generators.endpoint.EndpointGenerator;
 import webserver.generators.JsGenerator;
 import webserver.generators.js.JsType;
 import webserver.generators.js.MetaDataBuilder;
@@ -168,6 +169,11 @@ public class ServerHandler {
 
         LogUtils.info("Create thread pool with a capacity of %d...", threadCount);
         server.setExecutor(Executors.newFixedThreadPool(threadCount));
+
+        if (ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().isPresent()) {
+            handlers.put(ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().get(), new VideoStreamingHandler());
+        }
+
         handlers.entrySet().stream()
                 .peek(entry -> LogUtils.info("Loading handler %s...", entry.getKey()))
                 .forEach(entry -> server.createContext(entry.getKey(), entry.getValue()));

@@ -39,6 +39,6 @@ keytool -genkeypair -keyalg RSA -alias selfsigned -keystore $fileName -storepass
 if [ $DEV_MODE -eq 1 ]
 then
   echo #!/bin/bash > dev_run_https.sh
-  echo ./https.sh --keystore-pwd $keyStorePassword --token-pwd TOKEN_PASSWORD >> dev_run_https.sh
+  echo ./https.sh $keyStorePassword TOKEN_PASSWORD > dev_run_https.sh
   chmod u+x dev_run_https.sh
 fi

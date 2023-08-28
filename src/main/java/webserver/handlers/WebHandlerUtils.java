@@ -24,7 +24,6 @@ public class WebHandlerUtils {
         return true;
     }
 
-
     public static void prepareErrorResponse(HttpExchange exchange, int httpCode, ErrorReport errorReport) throws IOException {
         final String msg = JsonMapper.objectToJson(errorReport).toString();
         exchange.sendResponseHeaders(httpCode, msg.length());
@@ -35,13 +34,10 @@ public class WebHandlerUtils {
         exchange.getResponseBody().close();
     }
 
-
     @MdDoc(description = "Returns the given body response. If any extra header need to be returned you have to deal it by yourself in exchange.")
     public static void buildValidResponseAndClose(
-            @MdDoc(description = "HttpExchange instance provided directly the interface HttpHandler")
-            HttpExchange exchange,
-            @MdDoc(description = "The full body response, commonly we're returning a JSON format.")
-            String responseText) throws IOException {
+            @MdDoc(description = "HttpExchange instance provided directly the interface HttpHandler") HttpExchange exchange,
+            @MdDoc(description = "The full body response, commonly we're returning a JSON format.") String responseText) throws IOException {
         exchange.sendResponseHeaders(200, responseText.length());
         exchange.getResponseHeaders().add("Content-Type", "text/json");
         final OutputStream os = exchange.getResponseBody();
@@ -49,5 +45,4 @@ public class WebHandlerUtils {
         os.close();
         exchange.getResponseBody().close();
     }
-
 }
