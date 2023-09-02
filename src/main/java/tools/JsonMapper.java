@@ -337,6 +337,33 @@ public class JsonMapper {
                 builder.deleteCharAt(builder.length() - 1);
                 builder.append("]");
             }
+            case "HashSet" -> {
+
+                Set<Object> lst = (Set<Object>) value;
+                builder.append("[");
+                String simpleName1 = null;
+                for (Object o : lst) {
+                    simpleName1 = simpleName1 == null ? o.getClass().getSimpleName() : simpleName1;
+                    if (BASE_TYPES.contains(simpleName1)) {
+                        switch (simpleName1) {
+                            case "int", "Integer", "Long", "Double", "Float" -> builder.append(o);
+                            case "String" -> {
+                                builder.append("\"");
+                                builder.append(o);
+                                builder.append("\"");
+                            }
+                            default ->
+                                    throw new IllegalArgumentException("expects only base types here. Type=" + simpleName1);
+                        }
+                    } else {
+                        builder.append(objectToJson(o));
+                    }
+
+                    builder.append(",");
+                }
+                builder.deleteCharAt(builder.length() - 1);
+                builder.append("]");
+            }
             default -> builder.append(objectToJson(value));
         }
     }

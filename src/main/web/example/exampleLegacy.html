@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example</title>
+    <script src="../js/formCreator.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script src="../js/sidePanel.js"></script>
+    <script src="/lib.js"></script>
+    <script src="../js/screen-auth.js"></script>
+    <script src="../js/todoList.js"></script>
+    <link rel="stylesheet" href="../sidePanel.css">
+</head>
+<body>
+
+<div id="containerId">
+</div>
+
+<script>
+    function installListScreen(bodyId) {
+        removeAllChildren(bodyId);
+        let body = id(bodyId);
+        installTodoList(body);
+    }
+
+    showAuth(id("containerId"), res => {
+        if (res.token) {
+            removeAllChildren('containerId');
+            installSideMenu(id('containerId'), 'bodyId', [
+                { label:'List', action: o => installListScreen('bodyId')},
+                { label:'Logout', action: o => redirectLogout('idContainer') }
+            ]);
+        }
+    });
+
+    let form = new Form({
+        "idFieldA":{
+            "type":"text",
+            "label":"label fieldA"
+        },
+        "idSubmit":{
+            "type":"button",
+            "label":"Fake submit of form",
+            "onClick": e=> alert(e)
+        }
+    });
+    form.insertIn(id("containerId"));
+</script>
+
+</body>
+</html>

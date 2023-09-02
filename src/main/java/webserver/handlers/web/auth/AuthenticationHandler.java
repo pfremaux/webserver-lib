@@ -17,12 +17,14 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Base64;
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -30,36 +32,88 @@ import java.util.function.Function;
         "The programmer must instantiate it the right way to authenticate their user via the constructor.")
 public class AuthenticationHandler implements HttpHandler {
 
-    public static final BiFunction<String, String, AuthenticationResult> MOCKED_AUTH = (String login,
-                                                                                        String password) -> {
-        if ("admin".equals(login) && "admin".equals(password)) {
-            return new AuthenticationResult("1", true, "", List.of("admin"));
+    public static final BiFunction<String, byte[], AuthenticationResult> MOCKED_AUTH = (String login,
+                                                                                        byte[] password) -> {
+        if ("admin".equals(login) && "admin".equals(new String(password, StandardCharsets.UTF_8))) {
+            return new AuthenticationResult("1", true, "", Set.of("admin"));
         }
-        return new AuthenticationResult(null, false, "", List.of());
+        return new AuthenticationResult(null, false, "", Set.of());
     };
 
-    public static final Function<String, String> MOCKED_PASSWORD_ENCRYPTOR = Function.identity();
+    public static final Function<String, byte[]> MOCKED_PASSWORD_ENCRYPTOR = s -> s.getBytes(StandardCharsets.UTF_8);
 
     private final TokenStructure tokenStructure = new TokenStructure(DefaultTokenFields.values());
-    private final BiFunction<String, String, AuthenticationResult> authenticationValidator;
+    private final BiFunction<String, byte[], AuthenticationResult> authenticationValidator;
     @Deprecated // use AccountsHandler instead
-    private final Function<String, String> passwordEncryptor;
+    private final Function<String, byte[]> passwordEncryptor;
 
 
-    record AuthenticationResult(String userId, boolean valid, String errorDetails, List<String> roles) {
-    }
+    public static final class AuthenticationResult { // TODO PFR move outside
+        private final String userId;
+        private final boolean valid;
+        private final String errorDetails;
+        private final Set<String> roles;
+
+        public AuthenticationResult(String userId, boolean valid, String errorDetails, Set<String> roles) {
+            this.userId = userId;
+            this.valid = valid;
+            this.errorDetails = errorDetails;
+            this.roles = roles;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public boolean getValid() {
+            return valid;
+        }
+
+        public String getErrorDetails() {
+            return errorDetails;
+        }
+
+        public Set<String> getRoles() {
+            return roles;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (AuthenticationResult) obj;
+            return Objects.equals(this.userId, that.userId) &&
+                    this.valid == that.valid &&
+                    Objects.equals(this.errorDetails, that.errorDetails) &&
+                    Objects.equals(this.roles, that.roles);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(userId, valid, errorDetails, roles);
+        }
+
+        @Override
+        public String toString() {
+            return "AuthenticationResult[" +
+                    "userId=" + userId + ", " +
+                    "valid=" + valid + ", " +
+                    "errorDetails=" + errorDetails + ", " +
+                    "roles=" + roles + ']';
+        }
+
+        }
 
     @MdDoc(description = "Programmers must instantiate this constructor by themselves. " +
             "This library can't figure out by itself which users exist and which roles should be assigned.")
     public AuthenticationHandler(
             @MdDoc(description = "This BiFunction should authenticate a user based on a login/password. Password is supposed to be encrypted by the other lambda: passwordEncryptor." +
                     "i.e. this BiFunction should find out the pair login/encryptedPassword in a database to return a successful authentication.")
-            BiFunction<String, String, AuthenticationResult> authenticationValidator,
+            BiFunction<String, byte[], AuthenticationResult> authenticationValidator,
             @MdDoc(description = "This function must encrypt the password passed through the other parameter: authenticationValidator. This function will be called ")
-            Function<String, String> passwordEncryptor) {
+            Function<String, byte[]> passwordEncryptor) {
         this.authenticationValidator = authenticationValidator;
         this.passwordEncryptor = passwordEncryptor;
-
     }
 
     @Override

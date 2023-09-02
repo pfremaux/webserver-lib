@@ -1,0 +1,1 @@
+docker images | awk '{print $1}' | awk 'NR==2'

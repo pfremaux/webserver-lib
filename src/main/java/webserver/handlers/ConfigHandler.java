@@ -12,9 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,45 +25,21 @@ import java.util.stream.Stream;
 public class ConfigHandler {
     public static final String CONFIG_FILE = "--config-file";
     public static final String GENERATE_PROPERTIES_PARAM = "gen-prop";
+    public static final String ADD_ACCOUNT_PARAM = "add-account";
 
 
     private ConfigHandler() {
     }
 
-    public static void processActionsInCommandLine(Set<String> providedParameters, Map<String, String> parameters) throws IOException {
+    public static void processActionsInCommandLine(List<String> providedParameters, Map<String, String> parameters) throws IOException {
         // If user passed the help key, just display help and leave.
         if (providedParameters.contains(CliParameterLoader.DEFAULT_HELP_KEY)) {
             System.out.println(parameters.get(CliParameterLoader.DEFAULT_HELP_KEY));
             SystemUtils.endOfApp();
         } else if (providedParameters.contains(GENERATE_PROPERTIES_PARAM)) {
-            final StringBuilder builder = new StringBuilder();
-            for (ServerProperties serverProperty : ServerProperties.values()) {
-                if (serverProperty.getDescription() != null) {
-                    builder.append("# ").append(serverProperty.getDescription()).append('\n');
-                }
-                if (serverProperty.getValue().isPresent()) {
-                    builder.append(serverProperty.getKey());
-                    builder.append("=");
-                    builder.append(serverProperty.getValue().get());
-                    builder.append("\n");
-                } else {
-                    builder.append("# ");
-                    builder.append(serverProperty.getKey());
-                    builder.append("=<not set by default>");
-                    builder.append("\n");
-                }
-                builder.append("\n");
-            }
-            int counter = 0;
-            String classPath;
-            while ((classPath = System.getProperty("server.handlers." + counter + ".endpoint.class")) != null) {
-                builder.append("server.handlers.").append(counter).append(".endpoint.class").append("=").append(classPath).append("\n");
-                counter++;
-            }
-            final Path outputProperties = Path.of(ServerProperties.KEY_CONFIG_FILE_PATH.getValue().get());
-            Files.writeString(outputProperties, builder.toString());
+            regeneratePropertiesFile();
             SystemUtils.endOfApp();
-        } else if (providedParameters.contains("add-account")) {
+        } else if (providedParameters.contains(ADD_ACCOUNT_PARAM)) {
             final String login;
             byte[] hash;
             final String roles;
@@ -85,16 +59,60 @@ public class ConfigHandler {
                 System.out.println("Roles (separated with commas):");
                 roles = console.readLine();
             }
-            final int accountsCount = AccountsHandler.accountsCount();
-            System.out.println(getLoginKey(accountsCount) + "=" + login);
-            System.out.println(getPasswordKey(accountsCount) + "=" + new String(hash, StandardCharsets.UTF_8));
-            System.out.println(getRolesKey(accountsCount) + "=" + roles);
+            int counter = 0;
+            while (System.getProperty(getLoginKey(counter)) != null) {
+                counter++;
+            }
+            System.setProperty(getLoginKey(counter), login);
+            System.setProperty(getPasswordKey(counter), Base64.getEncoder().encodeToString(hash));
+            System.setProperty(getRolesKey(counter), roles);
+            regeneratePropertiesFile();
             SystemUtils.endOfApp();
         }
     }
 
+    private static void regeneratePropertiesFile() throws IOException {
+        final StringBuilder builder = new StringBuilder();
+        for (ServerProperties serverProperty : ServerProperties.values()) {
+            if (serverProperty.getDescription() != null) {
+                builder.append("# ").append(serverProperty.getDescription()).append('\n');
+            }
+            if (serverProperty.getValue().isPresent()) {
+                builder.append(serverProperty.getKey());
+                builder.append("=");
+                builder.append(serverProperty.getValue().get());
+                builder.append("\n");
+            } else {
+                builder.append("# ");
+                builder.append(serverProperty.getKey());
+                builder.append("=<not set by default>");
+                builder.append("\n");
+            }
+            builder.append("\n");
+        }
+        int counter = 0;
+        String classPath;
+        while ((classPath = System.getProperty("server.handlers." + counter + ".endpoint.class")) != null) {
+            builder.append("server.handlers.").append(counter).append(".endpoint.class").append("=").append(classPath).append("\n");
+            counter++;
+        }
 
-    public static void processConfigFile(Set<String> providedParameters, Map<String, String> parameters) {
+        counter = 0;
+        while (System.getProperty(getLoginKey(counter)) != null) {
+            final String loginKey = getLoginKey(counter);
+            final String passwordKey = getPasswordKey(counter);
+            final String rolesKey = getRolesKey(counter);
+            builder.append(loginKey).append("=").append(System.getProperty(loginKey)).append("\n");
+            builder.append(passwordKey).append("=").append(System.getProperty(passwordKey)).append("\n");
+            builder.append(rolesKey).append("=").append(System.getProperty(rolesKey)).append("\n");
+            counter++;
+        }
+        final Path outputProperties = Path.of(ServerProperties.KEY_CONFIG_FILE_PATH.getValue().get());
+        Files.writeString(outputProperties, builder.toString());
+    }
+
+
+    public static void processConfigFile(List<String> providedParameters, Map<String, String> parameters) {
         LogUtils.info("Looking for a config file...");
         if (providedParameters.contains(CONFIG_FILE)) {
             final String configFile = parameters.get(CONFIG_FILE);
@@ -134,15 +152,14 @@ public class ConfigHandler {
         int accountCounter = 0;
         String login;
         while ((login = p.getProperty(getLoginKey(accountCounter))) != null) {
-            accountCounter++;
             final String pwd = p.getProperty(getPasswordKey(accountCounter));
             final String roles = p.getProperty(getRolesKey(accountCounter));
             AccountsHandler.register(
                     login,
-                    pwd,
+                    Base64.getDecoder().decode(pwd),
                     Stream.of(roles.split(",")).map(String::trim).collect(Collectors.toSet())
             );
-
+            accountCounter++;
         }
     }
 
