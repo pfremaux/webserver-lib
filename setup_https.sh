@@ -33,6 +33,7 @@ keyStorePassword=$returnValue
 ask_with_default "File name? (must be provided in CLI)" "key-store.jks"
 fileName=$returnValue
 
+# TODO PFR -dname "cn=Unknown, ou=Unknown, o=Unknown, c=Unknown"
 keytool -genkeypair -keyalg RSA -alias selfsigned -keystore $fileName -storepass $keyStorePassword -keypass $keyPassword -validity 360 -keysize 2048 -deststoretype pkcs12
 
 

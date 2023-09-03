@@ -1,4 +1,4 @@
- 
+
 const TYPES = ["text", "combo", "range", "button"];
 
 

@@ -83,6 +83,7 @@ public class ServeFileHandler implements HttpHandler {
         builder.append("<html>");
         builder.append("<head>");
         builder.append("<meta http-equiv=\"Content-Security-Policy\" content=\"upgrade-insecure-requests\">");
+        builder.append("<link rel=\"stylesheet\" href=\"/web/css/baseMobile.css\">");
         builder.append("</head>");
 
         builder.append("<body>");

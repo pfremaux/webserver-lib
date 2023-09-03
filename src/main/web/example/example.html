@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Example</title>
-    <script src="../js/formCreator.js"></script>
     <script src="../js/helpers.js"></script>
-    <script src="../js/sidePanel.js"></script>
+    <script src="../js/formCreator.js"></script>
     <script src="/lib.js"></script>
     <script src="../js/screen-auth.js"></script>
-    <script src="../js/todoList.js"></script>
-    <link rel="stylesheet" href="../sidePanel.css">
 </head>
 <body>
 
@@ -17,34 +14,62 @@
 </div>
 
 <script>
-    function installListScreen(bodyId) {
-        removeAllChildren(bodyId);
-        let body = id(bodyId);
-        installTodoList(body);
+
+    function logout(containerId) {
+        let container = id(containerId);
+        removeAllChildren(containerId);
+        installAuth(containerId);
     }
 
-    showAuth(id("containerId"), res => {
-        if (res.token) {
-            removeAllChildren('containerId');
-            installSideMenu(id('containerId'), 'bodyId', [
-                { label:'List', action: o => installListScreen('bodyId')},
-                { label:'Logout', action: o => redirectLogout('idContainer') }
-            ]);
-        }
-    });
+    function installWelcomeScreenV1(containerId) {
+        let container = id(containerId);
+        appendTo(container,
+                    st('h3', 'Hello '+ACCOUNT.token).get(),
+                    appendTo(
+                        st('ul').tag,
+                        st('li')
+                            .child(st('div', 'goto ').tag)
+                            .child(st('a', 'thislink').andDo(tag=> tag.href='https://google.ca').tag)
+                            .tag
+                    ),
+                    dt('button', 'idLogout', evt => logout(containerId)).andDo(tag => {
+                        tag.innerHTML = 'logout';
+                    }).get()
+        );
+    }
 
-    let form = new Form({
-        "idFieldA":{
-            "type":"text",
-            "label":"label fieldA"
-        },
-        "idSubmit":{
-            "type":"button",
-            "label":"Fake submit of form",
-            "onClick": e=> alert(e)
-        }
-    });
-    form.insertIn(id("containerId"));
+    function installWelcomeScreenV3(containerId) {
+        let container = id(containerId);
+        tagOf(container)
+            .child(h3('Hello '+ACCOUNT.token))
+            .child(ul()
+                        .child(li()
+                            .child(div('goto ')
+				                .child(st('a', 'thislink').set( {href:'https://google.ca'} )
+				            )
+			            )
+			            .child(li('your token is ' + ACCOUNT.token))
+			            .child(li('your roles are ' + ACCOUNT.roles))
+            )
+            .child(dt('button', 'idLogout', evt => logout(containerId)).andDo(tag => {
+                        tag.innerHTML = 'logout';
+                    }))
+        );
+    }
+
+    function installAuth(containerId) {
+        showAuth(id(containerId), res => {
+            if (res.token) {
+                removeAllChildren(containerId);
+                installWelcomeScreenV3(containerId);
+            }
+        });
+    }
+
+    installAuth('containerId');
+
+
+
 </script>
 
 </body>

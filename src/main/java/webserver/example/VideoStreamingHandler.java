@@ -118,6 +118,7 @@ public class VideoStreamingHandler implements HttpHandler {
             while ((bytesRead = in.read(buffer, 0, Math.min(BUFFER_SIZE, remainingBytesToRead))) > 0  /*&& seek < endingPointer*/) {
                 os.write(buffer, 0, bytesRead);
                 remainingBytesToRead = remainingBytesToRead - bytesRead;
+                // TODO PFR tester en breakan direct ici
             }
             os.flush();
         } catch (Throwable t) {

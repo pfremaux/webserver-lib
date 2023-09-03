@@ -28,6 +28,7 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,6 +37,7 @@ public class ServerHandler {
 
     public static final String KEYSTORE_PWD = "--keystore-pwd";
     public static final String SESSION_TOKEN_PWD = "--token-pwd";
+    private static Function<String, String[]> customWelcomeLogs;
 
     private ServerHandler() {
     }
@@ -45,9 +47,11 @@ public class ServerHandler {
             @MdDoc(description = "Command line parameters passed by the runner.")
             String[] args,
             @MdDoc(description = "This HTTP handler will validate the caller's authentication.")
-            AuthenticationHandler authenticationHandler
+            AuthenticationHandler authenticationHandler,
+            Function<String, String[]> customWelcomeLogs
     ) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, UnrecoverableKeyException, KeyManagementException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        final Set<String> providedParameters = Stream.of(args).collect(Collectors.toSet());
+        ServerHandler.customWelcomeLogs = customWelcomeLogs;
+        final List<String> providedParameters = Stream.of(args).collect(Collectors.toList());
         final CliParameterLoader cliLoader = getCliParameterLoader();
         final Map<String, String> parameters = cliLoader.load(args);
         // We need to process the config file FIRST and the command line after as some command line
@@ -71,6 +75,7 @@ public class ServerHandler {
                 KEYSTORE_PWD, "The Java Key Store password. It's required if you passed a jks path.",//
                 SESSION_TOKEN_PWD, "Password token. It's the symmetric key used to encrypted the session..",//
                 ConfigHandler.GENERATE_PROPERTIES_PARAM, "Generate a default properties file", //
+                ConfigHandler.ADD_ACCOUNT_PARAM, "Add an account with password and roles in the properties file.", //
                 ConfigHandler.CONFIG_FILE, ".properties file to customize/enable functionalities." //
         ),
                 Map.of(/*fill with map when parameters are linked with each other, and you want to create pairs of required fields*/));
@@ -109,6 +114,38 @@ public class ServerHandler {
                         doc -> jsScript.append(generateFormCreationInJs(doc)),
                         doc -> LogUtils.debug("Documenting generated endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
 
+        initializeNativeEndpoints(handlers, authenticationHandler, endpointsDocs, jsScript);
+
+        // Set up the HTTP server itself.
+        final int port = ServerProperties.LISTENING_PORT.asInteger().orElse(8080);
+        final int threadCount = ServerProperties.MAX_THREAD.asInteger().orElse(5);
+
+        // Create the server for serving HTTPS or HTTP depending on the settings.
+        boolean initTls = storePassKey != null;
+        final HttpServer server;
+        if (initTls) {
+            LogUtils.info("Initializing HTTP over TLS on port %d...", port);
+            server = HttpsServer.create(new InetSocketAddress(port), 0);
+            final String keyStorePath = ServerProperties.KEY_STORE_PATH.getValue().orElse(null);
+            initSSL((HttpsServer) server, storePassKey, keyStorePath);
+        } else {
+            LogUtils.info("Initializing HTTP on port %d...", port);
+            server = HttpServer.create(new InetSocketAddress(port), 0);
+        }
+
+        LogUtils.info("Create thread pool with a capacity of %d...", threadCount);
+        server.setExecutor(Executors.newFixedThreadPool(threadCount));
+
+
+        handlers.entrySet().stream()
+                .peek(entry -> LogUtils.info("Loading handler %s...", entry.getKey()))
+                .forEach(entry -> server.createContext(entry.getKey(), entry.getValue()));
+        server.start();
+        logWelcomeMessage(port, initTls);
+
+    }
+
+    private static void initializeNativeEndpoints(Map<String, HttpHandler> handlers, AuthenticationHandler authenticationHandler, List<DocumentedEndpoint> endpointsDocs, StringBuilder jsScript) {
         // If the auth endpoint has been set up then register it and expose it.
         if (ServerProperties.KEY_AUTH_ENDPOINT.getValue().isPresent()) {
             LogUtils.info("Initializing auth endpoint...");
@@ -150,35 +187,22 @@ public class ServerHandler {
             handlers.put(ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().get(), new SelfDescribeHandler(endpointsDocs));
         }
 
-        // Set up the HTTP server itself.
-        final int port = ServerProperties.LISTENING_PORT.asInteger().orElse(8080);
-        final int threadCount = ServerProperties.MAX_THREAD.asInteger().orElse(5);
-
-        // Create the server for serving HTTPS or HTTP depending on the settings.
-        boolean initTls = storePassKey != null;
-        final HttpServer server;
-        if (initTls) {
-            LogUtils.info("Initializing HTTP over TLS on port %d...", port);
-            server = HttpsServer.create(new InetSocketAddress(port), 0);
-            final String keyStorePath = ServerProperties.KEY_STORE_PATH.getValue().orElse(null);
-            initSSL((HttpsServer) server, storePassKey, keyStorePath);
-        } else {
-            LogUtils.info("Initializing HTTP on port %d...", port);
-            server = HttpServer.create(new InetSocketAddress(port), 0);
-        }
-
-        LogUtils.info("Create thread pool with a capacity of %d...", threadCount);
-        server.setExecutor(Executors.newFixedThreadPool(threadCount));
 
         if (ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().isPresent()) {
             handlers.put(ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().get(), new VideoStreamingHandler());
         }
+    }
 
-        handlers.entrySet().stream()
-                .peek(entry -> LogUtils.info("Loading handler %s...", entry.getKey()))
-                .forEach(entry -> server.createContext(entry.getKey(), entry.getValue()));
-        server.start();
-        LogUtils.info("Accessible : %s://127.0.0.1:%d" + ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().orElse(""), initTls ? "https" : "http", port);
+    private static void logWelcomeMessage(int port, boolean initTls) {
+        final String baseUrl = "%s://127.0.0.1:%d".formatted(initTls ? "https" : "http", port);
+        String[] logs = customWelcomeLogs.apply(baseUrl);
+        if (logs.length == 0) {
+            LogUtils.info("Accessible : " + baseUrl + ServerProperties.KEY_SELF_DESCRIBE_ENDPOINT.getValue().orElse(""));
+        } else {
+            for (String log : logs) {
+                LogUtils.info(log);
+            }
+        }
     }
 
     // TODO PFR maybe move somewhere else

@@ -58,6 +58,101 @@ function toggle(o) {
 	}
 }
 
+
+function appendTo(...args) {
+    let parent = args[0];
+    for (let i = 1 ; i < args.length ; i++) {
+        if (args[i].tag) {
+            parent.appendChild(args[i].tag);
+        } else {
+            parent.appendChild(args[i]);
+        }
+    }
+    return parent;
+}
+
+function h3(text) {
+    return st('h3', text);
+}
+
+
+function h4(text) {
+    return st('h4', text);
+}
+
+function ul() {
+    return st('ul');
+}
+
+function li(text) {
+    return st('li', text);
+}
+
+
+function div(text) {
+    return st('div', text);
+}
+
+/** Stands for Simple Tag
+*/
+function st(type, text) {
+    let t = new Tag(type)
+            .andDo(tag => tag.innerHTML = text? text:'');
+    return t;
+}
+
+/* Stands for Dynamic Tag */
+function dt(type, id, onClick) {
+    let tag = new Tag(type).
+        andDo(e => {
+            e.id = id;
+            e.onclick = onClick? onClick : e => {};
+        });
+
+    return tag;
+}
+
+function tagOf(htmlTag) {
+    let tag = new Tag(htmlTag.name);
+    tag.tag = htmlTag;
+    return tag;
+}
+
+function Tag(name) {
+    this.tag = el(name);
+    this.child = function(tag) {
+        if (tag.tag) {
+            this.tag.appendChild(tag.tag);
+        } else {
+            console.log(typeof tag + ' = ' + JSON.stringify(tag));
+            this.tag.appendChild(tag);
+        }
+        return this;
+    }
+    this.text = function(txt) {
+        this.tag.innerHTML = text;
+        return this;
+    }
+    this.attr = function(k,v) {
+        this.tag[k] = v;
+        return this;
+    }
+    this.andDo = function(lambda) {
+        lambda(this.tag);
+        return this;
+    }
+    this.set = function(obj) {
+        for(let k in obj) {
+            console.log('key = '+k);
+            this.tag[k] = obj[k];
+        }
+        return this;
+    }
+    this.get = function() {
+        return this.tag;
+    }
+}
+
 const PAGE_SIZE = 5;
 let GLOBAL = {
 	tablesPages:{},
