@@ -1,0 +1,21 @@
+
+.vignette {
+  margin: 10px; 
+  width: fit-content;
+}
+
+.vignette-title {
+ margin: 5px;
+ padding: 5px;
+}
+
+.vignette-image {
+ border-radius: 5px;
+ padding: 5px;
+ background: #73AD21;
+}
+
+.vignettes {
+ display:inline-flex;
+ border-style: solid;
+}
