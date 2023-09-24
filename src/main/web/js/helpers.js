@@ -50,6 +50,7 @@ function toggle(o) {
 		} else {
 			id(o).style.display = "inline";
 		}
+		return;
 	}
 	if (o.style.display !== "none") {
 		o.style.display = "none";
@@ -102,7 +103,7 @@ function st(type, text) {
 }
 
 /* Stands for Dynamic Tag */
-function dt(type, id, onClick) {
+function dt(type, onClick) {
     let tag = new Tag(type).
         andDo(e => {
             e.id = id;

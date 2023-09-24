@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example</title>
+    <script src="../js/helpers.js"></script>
+    <script src="../js/formCreator.js"></script>
+    <script src="/lib.js"></script>
+    <script src="../js/screen-auth.js"></script>
+</head>
+<body>
+
+<div id="containerId">
+</div>
+
+<script>
+
+    function saveText() {
+        let value = id('idTextToSave').value;
+        console.log(value);
+        save(value, response => console.log(JSON.stringify(response)));
+    }
+
+    function installWelcomeScreenV1(containerId) {
+        let container = id(containerId);
+        appendTo(container,
+                    st('h3', 'Hello save text now').get(),
+                    appendTo(
+                        st('ul').tag,
+                        st('li').child(st('input').andDo(tag=> {tag.type='text'; tag.id='idTextToSave';}).tag).tag,
+                        st('li').child(dt('button', evt => saveText()).andDo(tag=>tag.innerHTML='save').tag).tag
+                    ),
+
+        );
+    }
+
+     function installWelcome(containerId,param1) {
+        	const container = document.getElementById(containerId);
+        return appendTo(container
+        ,st('h3', 'Hello save text now')
+        ,st('ul')
+            .child(st('li')
+                .child(st('input').andDo(tag => {tag.id='idTextToSave'; tag.type='text'; tag.value=param1; }).tag
+                ))
+            .child(st('li')
+                .child(dt('button',evt => saveText()).andDo(tag => {tag.innerHTML='Save'; }).tag
+                )),st('h2', 'Ok again').tag);
+}
+
+
+
+/*
+installWelcome:param1
+h3 'Hello save text now'
+ul
+    li
+        input type=text id='idTextToSave' value=param1
+    li
+        button =>saveText()
+*/
+
+    installWelcomeScreenV1('containerId');
+    installWelcome('containerId', 'default text');
+
+
+</script>
+OK
+</body>
+</html>

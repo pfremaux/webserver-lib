@@ -12,32 +12,40 @@ import java.util.List;
  * The goal of this handler is to generate a HTML page that describes all endpoints.
  */
 public class SelfDescribeHandler implements HttpHandler {
-private static String pattern = """
-<html>
-    <head>
-        <script src="web/js/helpers.js"></script>
-    </head>
-    <body>
-    %s
-    </body>
-</html>
-        """;
+    private static String pattern = """
+            <html>
+                <head>
+                    <script src="web/js/helpers.js"></script>
+                </head>
+                <body>
+                %s
+                </body>
+            </html>
+                    """;
+
+    private final static String color_dark_blue = "#aaaaff";
+    private final static String color_blue = "#ccccff";
+    private final static String color_light_blue = "#eeeeff";
 
     private final String strContexts;
 
 
     public SelfDescribeHandler(List<DocumentedEndpoint> endpointsDoc) {
         final StringBuilder builder = new StringBuilder();
+        int counter = 1;
         for (DocumentedEndpoint doc : endpointsDoc) {
-            prepareHtmlDisplay(builder, doc);
+            prepareHtmlDisplay(builder, doc, counter++);
         }
         this.strContexts = pattern.formatted(builder.toString());
     }
 
-    private void prepareHtmlDisplay(StringBuilder builder, DocumentedEndpoint doc) {
+    private void prepareHtmlDisplay(StringBuilder builder, DocumentedEndpoint doc, int counter) {
+        builder.append("<div style=\"border-style:solid\">");
         if (doc.getHttpMethod().equalsIgnoreCase("GET")) {
             //builder.append("<h1  onclick=\"toggle(this)\">");// TODO PFR improve sinon ca cache le titre...
-            builder.append("<h1>");
+            builder.append("<h1 style='margin:0px;background-color:%s'>".formatted(color_dark_blue));
+            // TODO PFR toggle
+            addToggleComponent(builder, counter);
             builder.append("<a href=\"");
             builder.append(doc.getPath());
             builder.append("\">");
@@ -48,14 +56,18 @@ private static String pattern = """
             builder.append("</a>");
             builder.append("</h1>");
         } else {
-            builder.append("<h1 ");
-            builder.append(" onclick=\"toggle(this)\" >");
+            builder.append("<h1 style='margin:0px;background-color:%s'>".formatted(color_dark_blue));
+            addToggleComponent(builder, counter);
+            // TODO PFR toggle
+            //builder.append(" onclick=\"toggle(this)\" >");
             builder.append(doc.getHttpMethod());
             builder.append(" ");
             builder.append(doc.getPath());
             builder.append("</h1>");
         }
 
+        // TODO PFR grouping tag with background color
+        builder.append("<div id='details%d' style='background-color:%s; display:none'>".formatted(counter, color_blue));
         if (doc.getRole() != null) {
             builder.append("<h3>Requires role: ");
             builder.append(doc.getRole());
@@ -67,18 +79,27 @@ private static String pattern = """
             builder.append("</p>");
         }
         if (doc.getBodyExample() != null && !"".equals(doc.getBodyExample())) {
-            builder.append("<h4>Body example:</h4>");
-            builder.append("<p>");
+            builder.append("<h4>Body example:</h4>");// TODO PFR background
+            builder.append("<p style='background-color:%s'>".formatted(color_light_blue));
             builder.append(formatJson(doc.getBodyExample()));
             builder.append("</p>");
         }
         if (doc.getResponseExample() != null && !"".equals(doc.getResponseExample())) {
-            builder.append("<h4>Response example:</h4>");
-            builder.append("<p>");
+            builder.append("<h4>Response example:</h4>");// TODO PFR background
+            builder.append("<p style='background-color:%s'>".formatted(color_light_blue));
             builder.append(formatJson(doc.getResponseExample()));
             builder.append("</p>");
         }
+        builder.append("</div>"); // End of details block
+        builder.append("</div>"); // End of global border styled block
         builder.append("<br/>");
+    }
+
+    private void addToggleComponent(StringBuilder builder, int counter) {
+        builder.append("<div style=\"cursor:hand;display:inline\" onclick='toggle(\"details\"+%d);".formatted(counter));
+        builder.append("console.log(this.innerHTML);");
+        builder.append("this.innerHTML = this.innerHTML === \"+ \"? \"- \":\"+ \"'>+ ");
+        builder.append("</div>");
     }
 
     @Override
