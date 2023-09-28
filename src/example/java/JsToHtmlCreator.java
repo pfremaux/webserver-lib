@@ -10,7 +10,7 @@ installWelcome:param1
 h3 'Hello save text now'
 ul
     li
-        input type='text' id='idTextToSave' value=param1
+        input type='text' id='idTextToSave'
     li
         button =>saveText() innerHTML='Save'
 h2 'Ok again'
@@ -32,6 +32,7 @@ h2 'Ok again'
         int previousIndendationCount = 0;
         boolean inDynamicTag = false;
         final Map<String, String> attributesToSetup = new HashMap<>();
+        boolean firstInstruction = false;
         for (final String line : lines) {
             if (methodName == null) {
                 String[] split = line.trim().split(":");
@@ -52,7 +53,8 @@ h2 'Ok again'
                 outputSource.append(") {\n").append(sourceIndentation);
                 outputSource.append("\tconst container = document.getElementById(containerId);\n")
                         .append(sourceIndentation).append("return appendTo(container");
-
+                firstInstruction = true;
+                //innerChild++;
             } else {
                 String properLine = line.replace("\t", "    ");
                 final int currentIndentation = countIndentation(properLine);
@@ -83,7 +85,8 @@ h2 'Ok again'
 
                 if (dynamiList.contains(tagName)) {
                     if (innerChild == 0) {
-                        outputSource.append(")\n");
+                        //outputSource.append(")");// TODO PFR recement commnent/ a rme
+                        outputSource.append("\n");
                         outputSource.append(sourceIndentation);
                         outputSource.append(",");
                     }
@@ -93,7 +96,8 @@ h2 'Ok again'
                     inDynamicTag = true;
                 } else {
                     if (innerChild == 0) {
-                        outputSource.append(")\n");
+                        //outputSource.append(")");// TODO PFR recement commnent/ a rme
+                        outputSource.append("\n");
                         outputSource.append(sourceIndentation);
                         outputSource.append(",");
                     }
@@ -139,6 +143,7 @@ h2 'Ok again'
                 waitOptionally = false;
                 attributesToSetup.clear();
 
+                firstInstruction = false;
             }
         }
         outputSource.append(".tag");

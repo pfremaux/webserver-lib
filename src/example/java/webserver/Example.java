@@ -37,7 +37,7 @@ public class Example {
                 "▉▉▉▉▉┈┈┈▕▂▂▂▏",
                 "▉▉▉▉▉┈┈┈▕▂▂▂▏",
                 "▔▔▔▔▔▔╲▂▕▂▂▂",
-                baseUrl + "/web/example/example.html"
+                baseUrl + "/web/example/savetext.html"
         };
     }
 

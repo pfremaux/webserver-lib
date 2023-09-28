@@ -18,34 +18,27 @@
     function saveText() {
         let value = id('idTextToSave').value;
         console.log(value);
-        save(value, response => console.log(JSON.stringify(response)));
+        save(value, response => {
+            console.log(JSON.stringify(response));
+            id('idTextToSave').value = '';
+        });
     }
 
-    function installWelcomeScreenV1(containerId) {
-        let container = id(containerId);
-        appendTo(container,
-                    st('h3', 'Hello save text now').get(),
-                    appendTo(
-                        st('ul').tag,
-                        st('li').child(st('input').andDo(tag=> {tag.type='text'; tag.id='idTextToSave';}).tag).tag,
-                        st('li').child(dt('button', evt => saveText()).andDo(tag=>tag.innerHTML='save').tag).tag
-                    ),
-
-        );
-    }
-
-     function installWelcome(containerId,param1) {
+       function installWelcome(containerId,param1) {
         	const container = document.getElementById(containerId);
         return appendTo(container
+
         ,st('h3', 'Hello save text now')
+
         ,st('ul')
             .child(st('li')
-                .child(st('input').andDo(tag => {tag.id='idTextToSave'; tag.type='text'; tag.value=param1; }).tag
+                .child(st('input').andDo(tag => {tag.id='idTextToSave'; tag.type='text'; }).tag
                 ))
             .child(st('li')
                 .child(dt('button',evt => saveText()).andDo(tag => {tag.innerHTML='Save'; }).tag
-                )),st('h2', 'Ok again').tag);
-}
+                ))
+        ,st('h2', 'Ok again').tag);
+    }
 
 
 
@@ -59,7 +52,6 @@ ul
         button =>saveText()
 */
 
-    installWelcomeScreenV1('containerId');
     installWelcome('containerId', 'default text');
 
 

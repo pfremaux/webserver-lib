@@ -1,4 +1,5 @@
 #!/bin/bash
+rm -Rf ./build/classes/java/main
 find . -name *.java > sources.txt
 javac @sources.txt -d ./build/classes/java/main
 

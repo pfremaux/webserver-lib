@@ -114,7 +114,10 @@ public class JsonMapper {
                 readingMode = ReadingMode.VALUE;
                 arrayBeingBuilt.clear();
             } else if (c == ':') {
-
+// TODO PFR experimental pour voir. d hab ce block est vide
+                //if (readingMode == ReadingMode.VALUE) {
+                    currentValueBeingBuilt.append(":");
+                //}
             } else if (c == ']') {
                 attributes.put(currentField, new ArrayList<>(arrayBeingBuilt));
                 arrayBeingBuilt.clear();
