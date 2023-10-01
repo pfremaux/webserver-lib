@@ -2,6 +2,7 @@ package tools;
 
 
 import webserver.annotations.JsonField;
+import webserver.annotations.JsonParameter;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -90,12 +91,9 @@ public class JsonMapper {
                     return (T) currentObject.getDeclaredConstructors()[0].newInstance(parameters);
                 } else {
                     currentObject = tClass;
-                    Object[] parameters = new Object[currentObject.getDeclaredConstructors()[0].getParameters().length];
-                    int counter = 0;
-                    for (Map.Entry<String, Object> entry : attributes.entrySet()) {
-                        parameters[counter] = entry.getValue();
-                        counter++;
-                    }
+                    Object[] parameters = getParametersValuesAssumedWithHelpers(currentObject, attributes);
+                    // TODO PFR /!\ l'ordre des parametres du constructeur ne sont pas assurés.
+                    //Object[] parameters = getParametersValuesAssumedWithLuck(currentObject, attributes);
                     return (T) currentObject.getDeclaredConstructors()[0].newInstance(parameters);
                 }
             } else if (c == ',') {
@@ -178,6 +176,36 @@ public class JsonMapper {
             // tClass.getDeclaredConstructors()[0].newInstance();
         }
         return null;
+    }
+
+    //TODO PFR deprecate
+    private static Object[] getParametersValuesAssumedWithLuck(Class<?> currentObject, Map<String, Object> attributes) {
+        Object[] parameters = new Object[currentObject.getDeclaredConstructors()[0].getParameters().length];
+        int counter = 0;
+        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+            parameters[counter] = entry.getValue();
+            counter++;
+        }
+        return parameters;
+    }
+
+    private static Object[] getParametersValuesAssumedWithHelpers(Class<?> currentObject, Map<String, Object> attributes) {
+        final Parameter[] parametersDeclarations = currentObject.getDeclaredConstructors()[0].getParameters();
+        final String[] parameterNamesOrdered = new String[parametersDeclarations.length];
+        int counter = 0;
+        for (Parameter parametersDeclaration : parametersDeclarations) {
+            final JsonParameter jsonParameterHint = parametersDeclaration.getDeclaredAnnotation(JsonParameter.class);
+            parameterNamesOrdered[counter] = jsonParameterHint.name();
+            counter++;
+        }
+        counter = 0;
+        final Object[] parameters = new Object[parametersDeclarations.length];
+
+        for (String parameterName : parameterNamesOrdered) {
+            parameters[counter] = attributes.get(parameterName);
+            counter++;
+        }
+        return parameters;
     }
 
     private static int findClosingCharacter(StringBuilder builder, int fromIndex) {

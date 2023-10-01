@@ -1,7 +1,11 @@
+package tool.action.generator.html;
+
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
-public class JsToHtmlCreator {
+class JsToHtmlCreator {
 
 
     private final static Set<String> dynamiList = Set.of("button");
@@ -17,11 +21,23 @@ h2 'Ok again'
             """;
 
     public static void main(String[] args) throws IOException {
-        final String f = "file.txt";
-        //final List<String> lines = Files.readAllLines(Paths.get(f));
-        final List<String> lines = Arrays.asList(input.split("\n"));
         String outputFile = "out.js";
-        StringBuilder outputSource = new StringBuilder();
+        final String f = "file.txt";
+        StringBuilder jsFunctions = convertStringScriptToJs(input);
+    }
+
+    public static void convertStringScriptToJs(Path input, Path output) throws IOException {
+        final List<String> lines = Files.readAllLines(input);
+        final StringBuilder stringBuilder = convertLinesScriptToJs(lines);
+        Files.writeString(output, stringBuilder);
+    }
+
+    private static StringBuilder convertStringScriptToJs(String input) {
+        final List<String> lines = Arrays.asList(input.split("\n"));
+        return convertLinesScriptToJs(lines);
+    }
+    private static StringBuilder convertLinesScriptToJs(List<String> lines) {
+        final StringBuilder outputSource = new StringBuilder();
         int innerChild = 0;
         String sourceIndentation = "    ";
         boolean waitOptionally = false;
@@ -85,8 +101,8 @@ h2 'Ok again'
 
                 if (dynamiList.contains(tagName)) {
                     if (innerChild == 0) {
-                        //outputSource.append(")");// TODO PFR recement commnent/ a rme
-                        outputSource.append("\n");
+                        //outputSource.append(")");// TODO PFR recement commnenté a rme
+                        //outputSource.append("\n");
                         outputSource.append(sourceIndentation);
                         outputSource.append(",");
                     }
@@ -96,8 +112,8 @@ h2 'Ok again'
                     inDynamicTag = true;
                 } else {
                     if (innerChild == 0) {
-                        //outputSource.append(")");// TODO PFR recement commnent/ a rme
-                        outputSource.append("\n");
+                        //outputSource.append(")");// TODO PFR recement commnenté a rme
+                        //outputSource.append("\n");
                         outputSource.append(sourceIndentation);
                         outputSource.append(",");
                     }
@@ -154,7 +170,7 @@ h2 'Ok again'
         outputSource.append(";\n");
         sourceIndentation = sourceIndentation.substring(0, sourceIndentation.length()-4);
         outputSource.append(sourceIndentation).append("}");
-        System.out.println(outputSource.toString());
+        return outputSource;
     }
 
     private static void finalizeDeclaration(StringBuilder outputSource, Map<String, String> attributesToSetup) {

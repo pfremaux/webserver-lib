@@ -139,7 +139,7 @@ public class AbstractEndpointHandler {
                 WebHandlerUtils.prepareErrorResponse(exchange, httpCode, processRequestStep.errorReport());
                 return true;
             } else if (processRequestStep.exception() != null) {
-                LogUtils.warning(processRequestStep.exception().getLocalizedMessage());
+                //LogUtils.warning(processRequestStep.exception().getMessage());
                 WebHandlerUtils.buildValidResponseAndClose(exchange, processRequestStep.exception().getLocalizedMessage());
                 return true;
             } else {

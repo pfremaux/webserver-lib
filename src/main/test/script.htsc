@@ -1,0 +1,8 @@
+installWelcome:param1
+h3 'Hello save text now'
+ul
+    li
+        input type='text' id='idTextToSave'
+    li
+        button =>saveText() innerHTML='Save'
+h2 'Ok again'

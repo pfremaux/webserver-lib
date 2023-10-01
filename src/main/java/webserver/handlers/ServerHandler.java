@@ -4,7 +4,7 @@ import com.sun.net.httpserver.*;
 import tools.*;
 import tools.security.SimpleSecretHandler;
 import webserver.ServerProperties;
-import webserver.example.VideoStreamingHandler;
+import webserver.handlers.web.VideoStreamingHandler;
 import webserver.generators.DocumentedEndpoint;
 import webserver.generators.endpoint.EndpointGenerator;
 import webserver.generators.JsGenerator;
@@ -105,9 +105,9 @@ public class ServerHandler {
         // Generate js libs AND Generate the API documentation for each endpoint.
         // TODO PFR Generate API endpoints in a static file instead of doing it at each startup:
         //  Ideally we shouldn't have to generate it at each startup. The goal is to reduce the time to run the server.
-        final List<DocumentedEndpoint> endpointsDocs = new ArrayList<>();
         final StringBuilder jsScript = new StringBuilder();
         jsScript.append(JsGenerator.asyncCallSource());
+        final List<DocumentedEndpoint> endpointsDocs = new ArrayList<>();
         final Map<String, HttpHandler> handlers = EndpointGenerator.loadHttpHandlers(instancesToProcess,
                 List.of(endpointsDocs::add,
                         doc -> jsScript.append(JsGenerator.generateJsCall(doc)),

@@ -30,13 +30,7 @@ public class Example {
     private static String[] customWelcomeLogs(String baseUrl) {
         return new String[]{
                 "Welcome!",
-                "┈┈┈┈┈┈▕▔╲",
-                "┈┈┈┈┈┈┈▏▕",
-                "┈┈┈┈┈┈┈▏▕▂▂▂",
-                "▂▂▂▂▂▂╱┈▕▂▂▂▏",
-                "▉▉▉▉▉┈┈┈▕▂▂▂▏",
-                "▉▉▉▉▉┈┈┈▕▂▂▂▏",
-                "▔▔▔▔▔▔╲▂▕▂▂▂",
+
                 baseUrl + "/web/example/savetext.html"
         };
     }

@@ -1,4 +1,4 @@
-package webserver.example;
+package webserver.handlers.web;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -15,12 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-// TODO PFR deprecated ? remove? duplicate?
-@Deprecated
 public class VideoStreamingHandler implements HttpHandler {
 
     private static final int BUFFER_SIZE = 4096;
-
     private final Path baseDir;
     private final String endpointRelativePath;
 
@@ -37,7 +34,7 @@ public class VideoStreamingHandler implements HttpHandler {
         int startingPointer = 0;
         int endingPointer = -1;
         if (rangeValues != null) {
-            LogUtils.debug(String.format("Range: %s", rangeValues.get(0)));
+            LogUtils.info(String.format("Range: %s", rangeValues.get(0)));
             String rangeParameters = rangeValues.get(0).substring("bytes=".length());
             String strStartingPointer = rangeParameters.substring(0, rangeParameters.indexOf("-"));
             startingPointer = Integer.parseInt(strStartingPointer);
@@ -46,25 +43,23 @@ public class VideoStreamingHandler implements HttpHandler {
                     .orElse(startingPointer + BUFFER_SIZE * 100);
         } else {
             for (Map.Entry<String, List<String>> entry : exchange.getRequestHeaders().entrySet()) {
-                LogUtils.debug(entry.getKey() + " -> " + entry.getValue());
+                LogUtils.info(entry.getKey() + " -> " + entry.getValue());
             }
         }
 
-        LogUtils.debug("Requested URI : " + requestURI.getPath());
+        LogUtils.info("Requested URI : " + requestURI.getPath());
         final String relativeFilePath = requestURI.toString().substring(endpointRelativePath.length());
         final String filePath = (baseDir.toFile().getAbsolutePath() + relativeFilePath).replaceAll("%20", " ");
         final File file = new File(filePath);
-        LogUtils.debug("Following file requested : " + file.getAbsolutePath());
+        LogUtils.info("Following file requested : " + file.getAbsolutePath());
         if (file.exists()) {
-            LogUtils.debug("File found !");
+            LogUtils.info("File found !");
             if (endingPointer > 0) {
                 supportFileChunk(exchange, file, startingPointer, endingPointer);
             } else {
                 dontSupportFileChunk(exchange, file);
             }
-
             return;
-
         }
         LogUtils.warning("File not found :(");
         exchange.sendResponseHeaders(400, 0);
@@ -90,7 +85,6 @@ public class VideoStreamingHandler implements HttpHandler {
         while ((bytesRead = inputStream.read(buffer)) > 0) {
             os.write(buffer, 0, bytesRead);
         }
-
         os.close();
         inputStream.close();
     }
@@ -108,9 +102,7 @@ public class VideoStreamingHandler implements HttpHandler {
 
         // This method must be called prior getResponseBody()
         exchange.sendResponseHeaders(finalChunk ? 200 : 206, realEndingPointer - startingPointer);
-
         final OutputStream os = exchange.getResponseBody();
-
         try {
             int bytesRead = 0;
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -125,9 +117,8 @@ public class VideoStreamingHandler implements HttpHandler {
             os.flush();
         } catch (Throwable t) {
             t.printStackTrace();
-            LogUtils.error(VideoStreamingHandler.class.getSimpleName() + " - supportFileChunk");
+            LogUtils.error(VideoStreamingHandler.class.getSimpleName() + " - " + t.getMessage() + " - supportFileChunk");
         }
-
         os.close();
         in.close();
     }

@@ -9,7 +9,7 @@ import java.util.Date;
 public class FileSystemAccess {
 
     private final Path basePath;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
     public FileSystemAccess(String basePath) {
         this.basePath = Path.of(basePath);

@@ -20,7 +20,7 @@ public class AccountsHandler {
     }
 
     public static Optional<Account> validateAndGetAccount(String login, byte[] hashed) {
-        final InternalAccount internalAccount = accounts.get(login);
+        final InternalAccount internalAccount = accounts.get(login);// TODO PFr might be null if bad login
         final byte[] valid = internalAccount.pwd;
         boolean isValid = hashed.length == valid.length;
         for (int i = 0; i < valid.length; i++) {

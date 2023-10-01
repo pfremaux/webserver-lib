@@ -1,6 +1,7 @@
 package webserver.handlers.web.auth;
 
 import webserver.annotations.JsonField;
+import webserver.annotations.JsonParameter;
 
 public class AuthBody {
 
@@ -9,7 +10,9 @@ public class AuthBody {
     @JsonField
     private final String pass;
 
-    public AuthBody(String login, String pass) {
+    public AuthBody(
+            @JsonParameter(name = "login") String login,
+            @JsonParameter(name = "pass") String pass) {
         this.login = login;
         this.pass = pass;
     }
