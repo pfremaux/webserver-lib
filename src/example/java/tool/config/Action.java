@@ -1,13 +1,15 @@
 package tool.config;
 
-import tool.config.internal.CliAction;
 import tool.action.generator.html.CliActionGenJsFromHtmlScript;
 import tool.action.help.CliHelp;
 import tool.action.profile.CliProfile;
+import tool.action.runnertest.CliLoadAndBuildWebserverLib;
+import tool.config.internal.CliAction;
 
 public enum Action {
     GENERATE_JSHTML_FROM_HTMLSCRIPT("gen-htjs", "generate js generator (to HTML) with html script.", new CliActionGenJsFromHtmlScript()),
     HELP("-h", "Display help.", new CliHelp()),
+    INSTALL_WEBSERVER_LIB("install-server-lib", "Download sources, build library webserver-lib and its config file in the current directory (requires write access).", new CliLoadAndBuildWebserverLib()),
     SET_PROFILE("profile", "Update server-config.properties to fit with the given profile.", new CliProfile()),
     ;
 
