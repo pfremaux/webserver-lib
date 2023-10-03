@@ -3,12 +3,11 @@ package tool.action.runnertest;
 import tool.config.Parameter;
 import tool.config.internal.CliAction;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import javax.swing.*;
+import java.io.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,7 +15,18 @@ public class CliLoadAndBuildWebserverLib implements CliAction {
     private String shortKey;
 
     public static void main(String[] args) {
-
+        System.getenv().entrySet().forEach(entry -> System.out.printf("%s -> %s\n", entry.getKey(), entry.getValue()));
+        final JFileChooser jFileChooser = new JFileChooser(new File(
+                Optional.ofNullable(
+                        System.getenv("userprofile")
+                ).orElse("/")
+        ));
+        jFileChooser.setDialogTitle("Choose file .......");
+        final int i = jFileChooser.showOpenDialog(null);
+        if (i == JFileChooser.APPROVE_OPTION) {
+            final File selectedFile = jFileChooser.getSelectedFile();
+            System.out.println(selectedFile.getAbsolutePath());
+        }
     }
 
     private static void runLinuxCommandLines() {

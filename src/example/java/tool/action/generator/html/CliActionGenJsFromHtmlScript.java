@@ -1,13 +1,14 @@
 package tool.action.generator.html;
 
-import tool.utils.Assert;
-import tool.config.internal.CliAction;
 import tool.config.Parameter;
+import tool.config.internal.CliAction;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import static tool.utils.Assert.require;
 
 public class CliActionGenJsFromHtmlScript implements CliAction {
     private final List<Parameter> requiredParameters = List.of(Parameter.INPUT_FILE, Parameter.OUTPUT_FILE);
@@ -28,8 +29,8 @@ public class CliActionGenJsFromHtmlScript implements CliAction {
                 output = Optional.of(parameters[++i]);
             }
         }
-        Assert.require(input, "You must provide an input path with flag: " + Parameter.INPUT_FILE.getShortKey());
-        Assert.require(output, "You must provide an output path with flag: " + Parameter.OUTPUT_FILE.getShortKey());
+        require(input, "You must provide an input path with flag: " + Parameter.INPUT_FILE.getShortKey());
+        require(output, "You must provide an output path with flag: " + Parameter.OUTPUT_FILE.getShortKey());
         final GenerateJsCodeToGenerateHtml generateJsCodeToGenerateHtml = new GenerateJsCodeToGenerateHtml(input.get(), output.get());
         generateJsCodeToGenerateHtml.run();
     }
