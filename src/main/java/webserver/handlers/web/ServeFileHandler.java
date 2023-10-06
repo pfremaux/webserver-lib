@@ -110,6 +110,7 @@ public class ServeFileHandler implements HttpHandler {
             builder.append(file.getName());
             builder.append("</a>");
 
+            // handleVideo(builder, file, fileURL);
             handleVideoV2(builder, file, fileURL);
 
             builder.append("</li>");
@@ -134,7 +135,7 @@ public class ServeFileHandler implements HttpHandler {
             builder.append("src=\"");
             // builder.append(fileURL);
             builder.append(fileURL.replace("/web/", "/watch/"));
-            builder.append("\" style=\"display:none\"");
+            builder.append("\" style=\"display:none\" type=\"video/mp4\"");
             builder.append("></video>");
         }
     }
@@ -149,8 +150,10 @@ function insertVideo(id, url) {
     videoTag.autoplay="autoplay";
      videoTag.muted="muted";
       videoTag.loop="loop";
+      videoTag.controls="controls";
       videoTag.style.width="640px";
       videoTag.style.height="480px";
+       videoTag.type="video/mp4";
     videoTag.src = url;
     document.getElementById(id).appendChild(videoTag);
     
@@ -174,8 +177,8 @@ function removeAllChildren(i) {
         if (file.getName().endsWith(".mp4")) {
             final String id = file.getName().trim() + ".id";
             builder.append("<div id=\"%s\">".formatted(id));
-            final String urlToWatch = fileURL.replace("/web/", "/watch/");
             builder.append("<a href=\"#\" onclick=\"");
+            final String urlToWatch = fileURL.replace("/web/", "/watch/");
             builder.append("insertVideo('%s', '%s')".formatted(id, urlToWatch));
             builder.append("\"> show");
             builder.append("</a>");
