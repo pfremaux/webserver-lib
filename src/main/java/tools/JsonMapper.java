@@ -307,6 +307,9 @@ public class JsonMapper {
             if (!declaredMethod.getName().startsWith("get")) {
                 continue;
             }
+            if (!declaredMethod.canAccess(result)) {
+                continue;
+            }
             try {
                 final Object value = declaredMethod.invoke(result);
                 final String simpleName = value.getClass().getSimpleName();
@@ -341,7 +344,7 @@ public class JsonMapper {
                 builder.append(value);
                 builder.append("\"");
             }
-            case "List12", "ArrayList" -> {
+            case "ListN","List12", "ArrayList" -> {
 
                 List<Object> lst = (List<Object>) value;
                 builder.append("[");
@@ -365,7 +368,9 @@ public class JsonMapper {
 
                     builder.append(",");
                 }
-                builder.deleteCharAt(builder.length() - 1);
+                if (!lst.isEmpty()) {
+                    builder.deleteCharAt(builder.length() - 1);
+                }
                 builder.append("]");
             }
             case "HashSet" -> {
