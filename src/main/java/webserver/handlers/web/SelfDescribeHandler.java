@@ -66,6 +66,13 @@ public class SelfDescribeHandler implements HttpHandler {
             builder.append("</h1>");
         }
 
+        if (doc.getJavaMethodName() != null) {
+            String callBackSeparator = doc.getParameters().isEmpty() ? "" : ", ";
+            builder.append("<div>")
+                    .append(doc.getJavaMethodName()).append("(").append(String.join(", ", doc.getParameters().values())).append(callBackSeparator+"e => {});")
+                    .append("</div>");
+        }
+
         // TODO PFR grouping tag with background color
         builder.append("<div id='details%d' style='background-color:%s; display:none'>".formatted(counter, color_blue));
         if (doc.getRole() != null) {

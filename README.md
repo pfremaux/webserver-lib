@@ -1,14 +1,14 @@
 # webserver-lib
 ## Description
-The goal of this project is to provide a light java webserver, with an easy way to create new endpoints.
+The goal of this project is to provide a light java web server, with an easy way to create new endpoints.
 This server is light because it's mostly using what the JDK already provides, and the way to create endpoint is like what some other framework are proposing: annotations.
 I made this server because of some projects I'm creating at home and I wanted to have a "toolbox" with what I commonly need.
-I found the design principle KISS (Keep It Simple Stupid) was a good approach here.
+I found the design principle KISS (Keep It Simple, Stupid) was a good approach here.
 
 ## Security and privacy
 It's quite trivial but largely enough for a project at home: 
 - this server supports HTTPS
-- authentications with login/password associated to a list of roles.
+- authentications with login/password associated to a list of roles. Passwords are hashed in SHA-256 and stored in a properties file.
 
 ## Installation
 ### From sources
@@ -18,18 +18,42 @@ So you'll need to manually paste the jar in a valid dependency path.
 - run `build.bat` or `build.sh`.
 - you should get `weberserver-lib.jar` and `server-config.properties` (might be worth spending time on reading this file).
 - put the jar in your project's libs directory and server-config.properties in your resources directory.
-- read the documentation.
+- read the documentation for more information.
+
 
 ## Examples
 ### Declare a new endpoint
+Create your Java project. Put `weberserver-lib.jar` in its classpath and `server-config.properties` in its resources path.
 Create a new class and type:
 ```
 @Endpoint(path = "/endpoint/path", method = "GET")
+// A description that will be used to describe the endpoint (see self-describe)
 @MdDoc(description = "Description of what the endpoint does")
-@Role(value = "requiredRole")
+// It's not mandatory but if you're using accounts, you'd better to define roles 
+// If you're just beginning ignore this part for now.
+// @Role(value = "requiredRole")
 public Response entryPointMethod(Map<String, List<String>> headers, Body body) {
+    // It's important to always declare headers. The webserver-lib ALWAYS expects it.
     return new Response("Ok !");
 }
+```
+
+```
+// Records are not supported yet.
+public class Response {
+    // This annotation is required. You must put it on ALL attributes. The library doesn't allow attributes that are not part of the response.
+    @JsonField
+    private final String data;
+    public Response(String data) {
+        this.data = data;
+    }
+    
+    // Good old getter style is important
+    public String getData() {
+        return this.data;
+    }
+}
+
 ```
 
 To start the server use this code:
@@ -40,8 +64,10 @@ NoSuchAlgorithmException, KeyStoreException, KeyManagementException, ClassNotFou
                 AuthenticationHandler.MOCKED_AUTH,
                 AuthenticationHandler.MOCKED_PASSWORD_ENCRYPTOR
         );
-        // TODO replace in Set.of() any class you declared with endpoints
-        ServerHandler.runServer(args, Set.of("webserver.example.MyEndpoints", "classpath.to.class.with.endpoint.annotation"), authenticationHandler);
+        ServerHandler.runServer(args, authenticationHandler, baseUrl -> new String[]{
+                "Welcome!",
+                baseUrl + "/self-describe"
+        });
 }
 ```
 
@@ -57,7 +83,7 @@ For example, with the following key:
 ```
 server.generate.js.lib.endpoint=/lib.js
 ```
-You'd have to do this call:
+Assuming you enabled HTTPS, you'd have to do this call:
 ```
 https://127.0.0.1:8081/lib.js
 ```
@@ -65,6 +91,8 @@ https://127.0.0.1:8081/lib.js
 ### Self describe
 The server returns the list of endpoints available for the client.
 - server.handler.self.describe.endpoint: /self-describe
+The server will return HTML page with all endpoints it knows. You should have body request and response. There should be a Javascript command you can copy
+to implement your call on client side.
 
 
 ### Expose static file
@@ -76,7 +104,7 @@ Simply expose files.
 ### Video streaming
 This functionality relies on the functionality above: "Expose static file". The path server.handler.static.files.base.directory
 will be used to retrieve the requested video.
-
+server.handler.video.files.base.directory: Usually should be equal to server.handler.static.files.base.directory unless you're handling video path differently
 
 ### Logs
 In server-config.properties you can use the following keys:
