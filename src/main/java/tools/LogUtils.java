@@ -61,7 +61,7 @@ public class LogUtils {
                 SimpleFormatter newFormatter = getNewInstanceFormatter();
 
                 Handler[] handlers = logger.getHandlers();
-                System.out.println("existing handler : " + handlers.length);
+                // System.out.println("existing handler : " + handlers.length);
                 handler.setFormatter(newFormatter);
                 final Level logLevel = Level.parse(ServerProperties.LOG_LEVEL.getValue().orElseThrow().toUpperCase());
                 // Seems necessary to set the log level on the handler AND logger.
