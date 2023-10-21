@@ -21,21 +21,17 @@
         installAuth(containerId);
     }
 
-    function installWelcomeScreenV1(containerId) {
-        let container = id(containerId);
-        appendTo(container,
-                    st('h3', 'Hello '+ACCOUNT.token).get(),
-                    appendTo(
-                        st('ul').tag,
-                        st('li')
-                            .child(st('div', 'goto ').tag)
-                            .child(st('a', 'thislink').andDo(tag=> tag.href='https://google.ca').tag)
-                            .tag
-                    ),
-                    dt('button', 'idLogout', evt => logout(containerId)).andDo(tag => {
-                        tag.innerHTML = 'logout';
-                    }).get()
-        );
+        function installWelcome(containerId,param1) {
+        	const container = document.getElementById(containerId);
+        return appendTo(container
+                ,st('h3', 'Hello save text now')
+                ,st('ul')
+            .child(st('li')
+                .child(st('input').andDo(tag => {tag.id='idTextToSave'; tag.type='text'; }).tag
+                ))
+            .child(st('li')
+                .child(dt('button',evt => saveText()).andDo(tag => {tag.innerHTML='Save'; }).tag
+                ))        ,st('h2', 'Ok again').tag);
     }
 
     function installWelcomeScreenV3(containerId) {
@@ -67,7 +63,7 @@
     }
 
     installAuth('containerId');
-
+installWelcome('containerId');
 
 
 </script>

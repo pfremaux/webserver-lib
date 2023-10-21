@@ -6,6 +6,7 @@ import webserver.generators.DocumentedEndpoint;
 import webserver.handlers.WebHandlerUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -69,8 +70,23 @@ public class SelfDescribeHandler implements HttpHandler {
         if (doc.getJavaMethodName() != null) {
             String callBackSeparator = doc.getParameters().isEmpty() ? "" : ", ";
             builder.append("<div>")
-                    .append(doc.getJavaMethodName()).append("(").append(String.join(", ", doc.getParameters().values())).append(callBackSeparator+"e => {});")
-                    .append("</div>");
+                    .append(doc.getJavaMethodName()).append("(").append(String.join(", ", doc.getParameters().values()));
+            builder.append(callBackSeparator+"e => {<br>");
+            if (doc.getReturnType() != null) {
+                for (Field declaredField : doc.getReturnType().getType().getDeclaredFields()) {
+                    builder.append("const obj = JSON.parse(e);<br>");
+                    builder.append("// obj.");
+                    builder.append(declaredField.getName());
+                    builder.append("<br>");
+                }
+            } else {
+                builder.append("// ");
+                builder.append(doc.getResponseExample());
+                builder.append("<br>");
+                builder.append("const obj = JSON.parse(e);<br>");
+            }
+            builder.append("});<br>");
+            builder.append("</div>");
         }
 
         // TODO PFR grouping tag with background color

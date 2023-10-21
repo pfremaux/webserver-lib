@@ -253,15 +253,15 @@ public class JsonMapper {
                 throw new IllegalArgumentException("Unexpected attribute name: %s in class %s. Did you forget to add @JsonField above the attribute declaration ?".formatted(attributeName, result.getName()));
             }
 
-            Class<?> value = declaredMethod.getReturnType();
+            Class<?> classType = declaredMethod.getReturnType();
 
-            final String simpleName = value.getSimpleName();
+            final String simpleName = classType.getSimpleName();
             builder.append("\"");
 
-            builder.append(declaredMethod.getName().substring(3, 4));
+            builder.append(declaredMethod.getName().substring(3, 4).toLowerCase());
             builder.append(declaredMethod.getName().substring(4));
             builder.append("\":");
-            if (value.getSimpleName().equals("List")) {
+            if (classType.getSimpleName().equals("List")) {
                 builder.append("[");
                 Type genericReturnType = declaredMethod.getGenericReturnType();
                 if (genericReturnType instanceof ParameterizedType) {
@@ -282,13 +282,13 @@ public class JsonMapper {
 
                 builder.append("]");
             } else {
-                if (value.isAssignableFrom(Number.class)
-                        || BASE_TYPES.contains(value.getSimpleName())) {
+                if (classType.isAssignableFrom(Number.class)
+                        || BASE_TYPES.contains(classType.getSimpleName())) {
                     builder.append(simpleName);
-                } else if (value.isAssignableFrom(String.class)) {
+                } else if (classType.isAssignableFrom(String.class)) {
                     builder.append("\"String\"");
                 } else {
-                    builder.append(objectToJsonExample(value));
+                    builder.append(objectToJsonExample(classType));
                 }
             }
 

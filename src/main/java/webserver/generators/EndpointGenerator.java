@@ -167,6 +167,7 @@ public class EndpointGenerator {
             }
 
 
+            // TODO PFR duplicate block? clarifier
             try {
                 if (bodyParameter.isPresent()) {
                     final Class<?> bodyParameterType = bodyParameter.get().getType();

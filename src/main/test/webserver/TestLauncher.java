@@ -21,7 +21,7 @@ public class TestLauncher {
                 AuthenticationHandler.MOCKED_AUTH,
                 AuthenticationHandler.MOCKED_PASSWORD_ENCRYPTOR
         );
-        ServerHandler.runServer(args, authenticationHandler, s -> new String[]{});
+        ServerHandler.runServer(args, authenticationHandler, o -> {}, s -> new String[]{});
     }
 
 }

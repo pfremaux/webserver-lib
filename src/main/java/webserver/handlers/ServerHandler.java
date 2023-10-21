@@ -28,6 +28,7 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -48,6 +49,9 @@ public class ServerHandler {
             String[] args,
             @MdDoc(description = "This HTTP handler will validate the caller's authentication.")
             AuthenticationHandler authenticationHandler,
+            @MdDoc(description = "If developer wants to process something with each endpoint being registered. The process will apply on startup and will never be re-executed..")
+            Consumer<DocumentedEndpoint> extensionFromDeveloper,
+            @MdDoc(description = "If developer wants to log a custom message when the server is started.")
             Function<String, String[]> customWelcomeLogs
     ) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, UnrecoverableKeyException, KeyManagementException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         ServerHandler.customWelcomeLogs = customWelcomeLogs;
@@ -62,7 +66,7 @@ public class ServerHandler {
         // These parameters shouldn't be defined in ServerProperties as it's related to passwords, it's a bit sensitive.
         final char[] ksPass = Optional.ofNullable(parameters.get(KEYSTORE_PWD)).map(String::toCharArray).orElse(null);
         final char[] tokenPass = parameters.getOrDefault(SESSION_TOKEN_PWD, "CHANGEME").toCharArray();
-        startWebServer(ksPass, tokenPass, authenticationHandler);
+        startWebServer(ksPass, tokenPass, authenticationHandler, extensionFromDeveloper);
     }
 
     /**
@@ -82,7 +86,7 @@ public class ServerHandler {
     }
 
 
-    private static void startWebServer(char[] storePassKey, char[] tokenPass, AuthenticationHandler authenticationHandler)
+    private static void startWebServer(char[] storePassKey, char[] tokenPass, AuthenticationHandler authenticationHandler, Consumer<DocumentedEndpoint> extensionFromDeveloper)
             throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException,
             UnrecoverableKeyException, KeyManagementException, NoSuchMethodException, ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
@@ -112,6 +116,7 @@ public class ServerHandler {
                 List.of(endpointsDocs::add,
                         doc -> jsScript.append(JsGenerator.generateJsCall(doc)),
                         doc -> jsScript.append(generateFormCreationInJs(doc)),
+                        extensionFromDeveloper,
                         doc -> LogUtils.debug("Documenting generated endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
 
         initializeNativeEndpoints(handlers, authenticationHandler, endpointsDocs, jsScript);
@@ -205,7 +210,7 @@ public class ServerHandler {
         }
     }
 
-    // TODO PFR maybe move somewhere else
+    // TODO PFR maybe delete
     private static StringBuilder generateFormCreationInJs(DocumentedEndpoint documentedEndpoint) {
         final StringBuilder formGeneratorBuilder = new StringBuilder();
         if (!documentedEndpoint.isHasForm()) {
