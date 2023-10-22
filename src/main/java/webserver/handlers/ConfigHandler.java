@@ -113,15 +113,15 @@ public class ConfigHandler {
 
 
     public static void processConfigFile(List<String> providedParameters, Map<String, String> parameters) {
-        LogUtils.info("Looking for a config file...");
         if (providedParameters.contains(CONFIG_FILE)) {
             final String configFile = parameters.get(CONFIG_FILE);
             ConfigHandler.loadConfigFile(configFile);
+            LogUtils.info("Loaded config file with specific path: [%s]", configFile);
         } else if (ServerProperties.KEY_CONFIG_FILE_PATH.getValue().map(path -> Files.exists(Path.of(path))).orElse(false)) {
             // If no config file parameter is passed, we're taking the default path where we could find this file.
             final String configFile = ServerProperties.KEY_CONFIG_FILE_PATH.getValue().get();
-            LogUtils.info("Loading default config file: [%s]", configFile);
             ConfigHandler.loadConfigFile(configFile);
+            LogUtils.info("Loaded default config file: [%s]", configFile);
         } else {
             // No config file found, we'll just rely on the default values.
             LogUtils.warning("No config file provided, trying to run anyway...");
@@ -135,7 +135,7 @@ public class ConfigHandler {
             LogUtils.error("Config file parameter provided but the properties file doesn't exist providedParameter=[%s], fullPath=[%s]", configFile, configFilePath.toFile().getAbsolutePath());
             SystemUtils.failUser();
         }
-        LogUtils.info("Config file %s found. Loading settings...", configFile);
+        //LogUtils.info("Config file %s found. Loading settings...", configFile);
         final Properties p = new Properties();
         try {
             p.load(new FileInputStream(configFilePath.toFile())); // Load the properties from a file stored in this jar
