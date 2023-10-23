@@ -65,6 +65,7 @@ body {
                     // {"script":String}
                     const script = e.substring(12, e.length-2);
                     console.log(script);
+                    removeAllChildren("renderingId");
                     eval("("+script+")")("renderingId", "param1");
                     document.getElementById("generatedCodeId").value = script;
                 });

@@ -39,7 +39,7 @@ public class Example {
             endpointList = new EndpointList(new ArrayList<>());
             Singletons.register(endpointList);
         }
-        endpointList.getEndpoints().add(new EndpointData(documentedEndpoint.getPath(), documentedEndpoint.getJavaMethodName()));
+        endpointList.getEndpoints().add(new EndpointData(documentedEndpoint.getPath(), documentedEndpoint.getJavaMethodName(), documentedEndpoint.getResponseExample()));
 
     }
 

@@ -38,7 +38,8 @@ h2 'Ok again'
     }
 
     private static StringBuilder convertStringScriptToJs(String input) {
-        final List<String> lines = Arrays.asList(input.split("\n"));
+        String[] split1 = input.split("\\\\n");
+        final List<String> lines = Arrays.asList(split1);
         return convertLinesScriptToJs(lines);
     }
     private static StringBuilder convertLinesScriptToJs(List<String> lines) {
@@ -77,7 +78,7 @@ h2 'Ok again'
                 firstInstruction = true;
                 //innerChild++;
             } else {
-                String properLine = line.replace("\t", "    ");
+                String properLine = line.replace("\t", "    ").replace("\\t", "    ");
                 final int currentIndentation = countIndentation(properLine);
                 if (currentIndentation < previousIndendationCount) {
                     // TODO PFR calculer le nombre de retour en arriere
@@ -101,7 +102,7 @@ h2 'Ok again'
                 } else {
                     outputSource.append("\n").append(sourceIndentation);
                 }
-                String[] words = properLine.trim().split(" ");
+                String[] words = cutAttributes(properLine.trim()).toArray(new String[0]);
                 String tagName = words[0];
 
                 if (dynamiList.contains(tagName)) {
@@ -144,6 +145,11 @@ h2 'Ok again'
                     } else if (word.contains("=")) {
                         String attrib = word.substring(0, word.indexOf('='));
                         String val = word.substring(word.indexOf('=') + 1);
+                        if (val.isEmpty()) {
+                            i++;
+                            val = words[i];
+                            attributesToSetup.put("tag." + attrib, val);
+                        }
                         attributesToSetup.put("tag." + attrib, val);
                     }
                     if (word.startsWith("'")) {
@@ -153,6 +159,9 @@ h2 'Ok again'
                     }
                 }
                 if (waitOptionally) {
+                    if (textBuffer.length() > 0) {
+                        outputSource.append(textBuffer);
+                    }
                     outputSource.append(")");
                 }
                 finalizeDeclaration(outputSource, attributesToSetup);
@@ -176,6 +185,33 @@ h2 'Ok again'
         sourceIndentation = sourceIndentation.substring(0, sourceIndentation.length()-4);
         outputSource.append(sourceIndentation).append("}");
         return outputSource;
+    }
+
+    @Deprecated
+    private static String[] cutAttributesLegacy(String properLine) {
+        return properLine.trim().split(" ");
+    }
+
+    private static List<String> cutAttributes(String properLine) {
+        if (properLine.isEmpty()) {
+            return List.of();
+        }
+        int i = properLine.indexOf("'");
+        if (i == -1) {
+            return Arrays.asList(properLine.trim().split(" "));
+        }
+        List<String> words = new ArrayList<>();
+        if (i > 0) {
+            String beforeText = properLine.substring(0, i);
+            String[] split = beforeText.split(" ");
+            words.addAll(Arrays.asList(split));
+        }
+        int endIndexMessage = properLine.indexOf("'", i + 1);
+        String message = properLine.substring(i, endIndexMessage+1);
+        words.add(message);
+        final List<String> subListWords = cutAttributes(properLine.substring(endIndexMessage+1));
+        words.addAll(subListWords);
+        return words;
     }
 
     private static void finalizeDeclaration(StringBuilder outputSource, Map<String, String> attributesToSetup) {

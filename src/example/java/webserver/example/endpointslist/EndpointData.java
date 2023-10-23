@@ -7,10 +7,13 @@ public class EndpointData {
     private final String path;
     @JsonField
     private final String jsName;
+    @JsonField
+    private final String responseExample;
 
-    public EndpointData(String path, String jsName) {
+    public EndpointData(String path, String jsName, String responseExample) {
         this.path = path;
         this.jsName = jsName;
+        this.responseExample = responseExample;
     }
 
     public String getPath() {
@@ -19,5 +22,9 @@ public class EndpointData {
 
     public String getJsName() {
         return jsName;
+    }
+
+    public String getResponseExample() {
+        return responseExample;
     }
 }
