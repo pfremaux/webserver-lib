@@ -256,11 +256,11 @@ public class JsonMapper {
             Class<?> classType = declaredMethod.getReturnType();
 
             final String simpleName = classType.getSimpleName();
-            builder.append("\"");
+            builder.append("'");
 
             builder.append(declaredMethod.getName().substring(3, 4).toLowerCase());
             builder.append(declaredMethod.getName().substring(4));
-            builder.append("\":");
+            builder.append("':");
             if (classType.getSimpleName().equals("List")) {
                 builder.append("[");
                 Type genericReturnType = declaredMethod.getGenericReturnType();
@@ -274,7 +274,13 @@ public class JsonMapper {
                     String typeName = argTypes[0].getTypeName();
                     String simpleNameGeneric = typeName.substring(typeName.lastIndexOf(".") + 1);
                     if (BASE_TYPES.contains(simpleNameGeneric)) {
-                        builder.append(simpleNameGeneric);
+                        if (FLOATING_TYPES.contains(simpleNameGeneric)) {
+                            builder.append("1.1");
+                        } else if (NOT_FLOATING_NUMBERS_TYPES.contains(simpleNameGeneric)) {
+                            builder.append("1");
+                        } else {
+                            builder.append("'").append(simpleNameGeneric).append("'");
+                        }
                     } else {
                         builder.append(objectToJsonExample(Class.forName(typeName)));
                     }
@@ -284,9 +290,9 @@ public class JsonMapper {
             } else {
                 if (classType.isAssignableFrom(Number.class)
                         || BASE_TYPES.contains(classType.getSimpleName())) {
-                    builder.append(simpleName);
+                    builder.append("1");
                 } else if (classType.isAssignableFrom(String.class)) {
-                    builder.append("\"String\"");
+                    builder.append("'String'");
                 } else {
                     builder.append(objectToJsonExample(classType));
                 }
@@ -296,7 +302,9 @@ public class JsonMapper {
 
         }
         builder.deleteCharAt(builder.length() - 1);
-        builder.append("}");
+        if (builder.length() > 0) {
+            builder.append("}");
+        }
         return builder;
     }
 
@@ -404,7 +412,13 @@ public class JsonMapper {
         }
     }
 
-    private final static List<String> BASE_TYPES = List.of("int", "Integer", "Long", "Double", "Float", "String");
+    private final static List<String> STRING_TYPES = List.of("String");
+    private final static List<String> FLOATING_TYPES = List.of("Double", "Float");
+    private final static List<String> NOT_FLOATING_NUMBERS_TYPES = List.of("int", "Integer", "Long", "String");
+    private final static List<String> BASE_TYPES = Stream.concat(
+            Stream.concat(STRING_TYPES.stream(), FLOATING_TYPES.stream()),
+            NOT_FLOATING_NUMBERS_TYPES.stream()
+    ).toList();
 
     enum ReadingMode {
         FIELD, VALUE, WAITING_FOR_VALUE, NONE

@@ -53,6 +53,7 @@ body {
     <script src="/web/js/helpers.js"></script>
     <script src="/lib.js"></script>
 </head>
+<body>
 <script>
         let lastTip = 0;
         let lastRefresh = 0;
@@ -63,11 +64,11 @@ body {
                 // TODO call
                 htmlScriptToJs("test:test\n"+document.getElementById("editorId").value, e => {
                     // {"script":String}
-                    const script = e.substring(12, e.length-2);
+                    const script = e.substring(11, e.length-2);
                     console.log(script);
                     removeAllChildren("renderingId");
-                    eval("("+script+")")("renderingId", "param1");
                     document.getElementById("generatedCodeId").value = script;
+                    eval("("+script+")")("renderingId", "param1");
                 });
 
             }
@@ -106,7 +107,6 @@ function setMethodName(str) {
 
 
 </script>
-<body>
 <div class="horizontal-container">
 
     <div style="width:45% ; height: 30%">
@@ -115,12 +115,12 @@ function setMethodName(str) {
             <div id="myDropdown" class="dropdown-content">
                 <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
                 <a href="#about" onclick="setMethodName('about')">About</a>
-                <a href="#base">Base</a>
+                <!--<a href="#base">Base</a>
                 <a href="#blog">Blog</a>
                 <a href="#contact">Contact</a>
                 <a href="#custom">Custom</a>
                 <a href="#support">Support</a>
-                <a href="#tools">Tools</a>
+                <a href="#tools">Tools</a>-->
             </div>
         </div>
         <input id="methodNameId" type="text" readonly>
@@ -173,7 +173,14 @@ function getCursorPosition(element) {
 
 listEndpoints(e=> {
     const endpoints = JSON.parse(e).endpoints;
-    endpoints.forEach(endpoint => console.log(endpoint.jsName +" -> "+endpoint.path));
+    const dropDownTag = document.getElementById('myDropdown');
+    endpoints.forEach(endpoint => {
+        console.log(endpoint.jsName +" -> "+endpoint.path);
+        const link = el('a');
+        link.href = '#'+endpoint.jsName;
+        link.innerHTML = endpoint.jsName +" -> "+endpoint.path;
+        dropDownTag.appendChild(link);
+    });
 
 });
 

@@ -61,10 +61,20 @@
             }
         });
     }
+function test(containerId, test) {
+	const container = document.getElementById(containerId);
+    return appendTo(container,
+        st('h1', 'test reel'),
+        st('label', 'Label').andDo(tag => {tag.forid='montext';}),
+        st('input').andDo(tag => {tag.id='montext';}),
+        dt('button', evt => save()).andDo(tag => {tag.innerHTML='fdffd';}),
+        st('ul').children(['coucou', 'coucou2'], e=>true, item => st('li', item))
+    );
+}
 
-    installAuth('containerId');
-installWelcome('containerId');
-
+//installAuth('containerId');
+// installWelcome('containerId');
+test('containerId');
 
 </script>
 

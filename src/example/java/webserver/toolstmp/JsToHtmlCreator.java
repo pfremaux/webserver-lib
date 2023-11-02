@@ -10,15 +10,15 @@ public class JsToHtmlCreator {
 
     private final static Set<String> dynamiList = Set.of("button");
     private final static String input = """
-installWelcome:param1
-h3 'Hello save text now'
-ul
-    li
-        input type='text' id='idTextToSave'
-    li
-        button =>saveText() innerHTML='Save'
-h2 'Ok again'
-            """;
+            installWelcome:param1\\n
+            h3 'Hello save text now'\\n
+            ul\\n
+                li\\n
+                    input type='text' id='idTextToSave'\\n
+                li\\n
+                    button =>saveText() innerHTML='Save'\\n
+            h2 'Ok again'\\n
+                        """;
 
     public static void main(String[] args) throws IOException {
         String outputFile = "out.js";
@@ -38,158 +38,144 @@ h2 'Ok again'
     }
 
     private static StringBuilder convertStringScriptToJs(String input) {
-        String[] split1 = input.split("\\\\n");
-        final List<String> lines = Arrays.asList(split1);
+        String[] split1 = input.replaceAll("\\t", "    ").split("\\\\n");
+        final List<String> lines = new ArrayList<>(Arrays.asList(split1));
         return convertLinesScriptToJs(lines);
     }
+
     private static StringBuilder convertLinesScriptToJs(List<String> lines) {
-        final StringBuilder outputSource = new StringBuilder();
-        int innerChild = 0;
-        String sourceIndentation = "    ";
-        boolean waitOptionally = false;
-
-        String methodName = null; // TODO PFR ne reset que si double ligne vide
-        // All declaration bellow need to be reset for each lines
-        final Set<String> parameters = new HashSet<>();
-        int previousIndendationCount = 0;
-        boolean inDynamicTag = false;
-        final Map<String, String> attributesToSetup = new HashMap<>();
-        boolean firstInstruction = false;
-        for (final String line : lines) {
-            if (methodName == null) {
-                String[] split = line.trim().split(":");
-                methodName = split[0];
-                if (split[1] != null && split[1].trim().length() > 0) {
-                    String[] parametersSplit = split[1].split(",");
-                    parameters.addAll(Arrays.asList(parametersSplit));
-                }
-                outputSource.append("\n").append(sourceIndentation).append("function ");
-                outputSource.append(methodName);
-                outputSource.append("(containerId,");
-                for (String parameter : parameters) {
-                    outputSource.append(parameter);
-                    outputSource.append(",");
-                }
-                outputSource.deleteCharAt(outputSource.length() - 1);
-                sourceIndentation += "    ";
-                outputSource.append(") {\n").append(sourceIndentation);
-                outputSource.append("\tconst container = document.getElementById(containerId);\n")
-                        .append(sourceIndentation).append("return appendTo(container");
-                firstInstruction = true;
-                //innerChild++;
-            } else {
-                String properLine = line.replace("\t", "    ").replace("\\t", "    ");
-                final int currentIndentation = countIndentation(properLine);
-                if (currentIndentation < previousIndendationCount) {
-                    // TODO PFR calculer le nombre de retour en arriere
-                    int indentationGroupCount = previousIndendationCount - currentIndentation;
-                    outputSource.append(".tag\n").append(sourceIndentation);
-                    outputSource.append(")".repeat(Math.max(0, indentationGroupCount / 4)));
-
-                    innerChild -= indentationGroupCount / 4;
-                    sourceIndentation = sourceIndentation.substring(0, sourceIndentation.length() - indentationGroupCount);
-                    if (innerChild > 0) {
-                        outputSource.append(")\n");
-                        outputSource.append(sourceIndentation);
-                        outputSource.append(".child(");
-                    }
-                } else if (currentIndentation > previousIndendationCount) {
-                    outputSource.append("\n");
-                    sourceIndentation += "    ";
-                    outputSource.append(sourceIndentation);
-                    outputSource.append(".child(");
-                    innerChild++;
-                } else {
-                    outputSource.append("\n").append(sourceIndentation);
-                }
-                String[] words = cutAttributes(properLine.trim()).toArray(new String[0]);
-                String tagName = words[0];
-
-                if (dynamiList.contains(tagName)) {
-                    if (innerChild == 0) {
-                        //outputSource.append(")");// TODO PFR recement commnenté a rme
-                        //outputSource.append("\n");
-                        outputSource.append(sourceIndentation);
-                        outputSource.append(",");
-                    }
-                    outputSource.append("dt('");
-                    outputSource.append(tagName);
-                    outputSource.append("'");
-                    inDynamicTag = true;
-                } else {
-                    if (innerChild == 0) {
-                        //outputSource.append(")");// TODO PFR recement commnenté a rme
-                        //outputSource.append("\n");
-                        outputSource.append(sourceIndentation);
-                        outputSource.append(",");
-                    }
-                    outputSource.append("st('");
-                    outputSource.append(tagName);
-                    outputSource.append("'");
-                    waitOptionally = true;
-                }
-
-                final StringBuilder textBuffer = new StringBuilder();
-                for (int i = 1; i < words.length; i++) {
-                    final String word = words[i];
-                    if (textBuffer.length() > 0) {
-                        textBuffer.append(" ").append(word);
-                        if (word.endsWith("'")) {
-                            outputSource.append(textBuffer);
-                            textBuffer.delete(0, textBuffer.length());
-                        }
-                    } else if (word.startsWith("=>")) {
-                        outputSource.append(",");
-                        outputSource.append("evt => ").append(word.substring(2));
-                        outputSource.append(")");
-                    } else if (word.contains("=")) {
-                        String attrib = word.substring(0, word.indexOf('='));
-                        String val = word.substring(word.indexOf('=') + 1);
-                        if (val.isEmpty()) {
-                            i++;
-                            val = words[i];
-                            attributesToSetup.put("tag." + attrib, val);
-                        }
-                        attributesToSetup.put("tag." + attrib, val);
-                    }
-                    if (word.startsWith("'")) {
-                        textBuffer.append(", ").append(word);
-                    } else {
-                        System.out.println("impossible to process " + line);
-                    }
-                }
-                if (waitOptionally) {
-                    if (textBuffer.length() > 0) {
-                        outputSource.append(textBuffer);
-                    }
-                    outputSource.append(")");
-                }
-                finalizeDeclaration(outputSource, attributesToSetup);
-
-                previousIndendationCount = currentIndentation;
-
-                parameters.clear();
-                inDynamicTag = false;
-                waitOptionally = false;
-                attributesToSetup.clear();
-
-                firstInstruction = false;
+        final NodeV2<HTag> root = NodeV2.root();
+        NodeV2<HTag> currentNode = root.addDir("rootCode");
+        int previousIndentationSpaces = 0;
+        // TODO PFR remove remove() et gerer first line autrement
+        final String firstLineDeclarationFunction = lines.remove(0);
+        for (String line : lines) {
+            final int countIndentationSpaces = countIndentation(line.replace("\\t", "    "));
+            line = line.trim().replaceAll("\\n", "").replace("\\t", "").replace("\t", "");
+            if (line.isEmpty()) {
+                continue;
             }
+            final HTag tag = toTag(line);
+
+            if (countIndentationSpaces == previousIndentationSpaces) {
+                currentNode = currentNode.addSibling(tag);
+            } else if (countIndentationSpaces < previousIndentationSpaces) {
+                int parentCount = (previousIndentationSpaces - countIndentationSpaces) / 4;
+                for (int i = 0; i < parentCount; i++) {
+                    currentNode = currentNode.getParent();
+                }
+                currentNode = currentNode.addSibling(tag);
+            } else if (countIndentationSpaces > previousIndentationSpaces) {
+                // There's no scenario where we're deeper more than 1
+                currentNode = currentNode.addLeaf(tag);
+            }
+
+            previousIndentationSpaces = countIndentationSpaces;
         }
-        outputSource.append(".tag");
-        while (innerChild >= 0) {
-            outputSource.append(")");
-            innerChild--;
-        }
-        outputSource.append(";\n");
-        sourceIndentation = sourceIndentation.substring(0, sourceIndentation.length()-4);
-        outputSource.append(sourceIndentation).append("}");
-        return outputSource;
+        final StringBuilder functionSource = new StringBuilder();
+        return functionSource.append(getJsFunctionDeclaration(firstLineDeclarationFunction)).append(" {\n")
+                .append("\tconst container = document.getElementById(containerId);\n    return appendTo(container")
+                .append(toJs(root, 1).append(");\n}"));
     }
 
-    @Deprecated
-    private static String[] cutAttributesLegacy(String properLine) {
-        return properLine.trim().split(" ");
+    private static StringBuilder getJsFunctionDeclaration(String firstLineDeclarationFunction) {
+        final StringBuilder builder = new StringBuilder("function ");
+        final String[] split = firstLineDeclarationFunction.split(":");
+        builder.append(split[0]).append("(containerId, ");
+        for (int i = 1; i < split.length; i++) {
+            builder.append(split[i]).append(", ");
+        }
+        if (split.length > 1) {
+            builder.setLength(builder.length()-2);
+        }
+        builder.append(")");
+        return builder;
+    }
+
+    private static StringBuilder toJs(NodeV2<HTag> currentTag, int indentationLevel) {
+        final StringBuilder b = new StringBuilder();
+
+        for (NodeV2<HTag> child : currentTag.getChildren()) {
+            final StringBuilder jsPiece = toJs(child, indentationLevel + 1);
+            if (jsPiece.isEmpty()) {
+                continue;
+            }
+            if (currentTag.getParent() == null) {
+                b.append(",\n").append(indent(indentationLevel, true)).append(jsPiece);
+            } else {
+                b.append("\n").append(indent(indentationLevel, true)).append(".child(").append(jsPiece).append("\n").append(indent(indentationLevel, true)).append(")");
+            }
+        }
+        if (currentTag.getValue() != null) {
+            return tagToJs(currentTag.getValue()).append(b);
+        }
+        return b;
+    }
+
+    private static StringBuilder tagToJs(HTag tag) {
+        StringBuilder b = new StringBuilder();
+        if (tag.onClickAction().length() > 0) {
+            b.append("dt('");
+        } else {
+            b.append("st('");
+        }
+        b.append(tag.name()).append("'");
+        if (tag.text().length() > 0) {
+            b.append(", '").append(tag.text()).append("'");
+        }
+        if (tag.onClickAction().length() > 0) {
+            b.append(", evt => ").append(tag.onClickAction());
+        }
+        b.append(")");
+        if (!tag.keys().isEmpty()) {
+            b.append(".andDo(tag => {");
+            for (Map.Entry<String, String> entry : tag.keys().entrySet()) {
+                b.append("tag.").append(entry.getKey()).append("=").append("'").append(entry.getValue()).append("';");
+            }
+            b.append("})");
+        }
+        return b;
+    }
+
+    private static HTag toTag(String line) {
+        final int firstSpaceIndex = line.indexOf(" ");
+        if (firstSpaceIndex == -1) {
+            return new HTag(line.trim().replaceAll("\\t", ""));
+        }
+        final String tagName = line.substring(0, firstSpaceIndex);
+        final String remainingLine = line.substring(firstSpaceIndex + 1);
+        List<String> groupwords = cutAttributes(remainingLine);
+        String text = "";
+        String onClickAction = "";
+        Map<String, String> kv = new HashMap<>();
+        for (int i = 0; i < groupwords.size(); i++) {
+            final String groupword = groupwords.get(i);
+            if (groupword.isEmpty()) {
+                continue;
+            }
+            if (groupword.startsWith("'")) {
+                text = groupword.substring(1, groupword.length() - 1);
+            } else if (groupword.startsWith("=>")) {
+                onClickAction = groupword.substring(2);
+            } else {
+                int equalIndex = groupword.indexOf("=");
+                if (equalIndex > -1) {
+                    String key = groupword.substring(0, equalIndex);
+                    String value = groupword.substring(equalIndex + 1);
+                    if (value.isEmpty()) {
+                        i++;
+                        String val = groupwords.get(i);
+                        kv.put(key, val.substring(1, val.length() - 1));
+                    } else {
+                        kv.put(key, value);
+                    }
+                } else {
+                    System.out.println("Can't process word " + groupword);
+                }
+
+            }
+        }
+        return new HTag(tagName, kv, text, onClickAction);
     }
 
     private static List<String> cutAttributes(String properLine) {
@@ -207,33 +193,35 @@ h2 'Ok again'
             words.addAll(Arrays.asList(split));
         }
         int endIndexMessage = properLine.indexOf("'", i + 1);
-        String message = properLine.substring(i, endIndexMessage+1);
+        String message = properLine.substring(i, endIndexMessage + 1);
         words.add(message);
-        final List<String> subListWords = cutAttributes(properLine.substring(endIndexMessage+1));
+        final List<String> subListWords = cutAttributes(properLine.substring(endIndexMessage + 1));
         words.addAll(subListWords);
         return words;
     }
 
-    private static void finalizeDeclaration(StringBuilder outputSource, Map<String, String> attributesToSetup) {
-        if (attributesToSetup.isEmpty()) {
-            return;
-        }
-        outputSource.append(".andDo(tag => {");
-        for (Map.Entry<String, String> entry : attributesToSetup.entrySet()) {
-            outputSource.append(entry.getKey());
-            outputSource.append("=");
-            outputSource.append(entry.getValue());
-            outputSource.append("; ");
-        }
-        outputSource.append("})");
-    }
-
     private static int countIndentation(String cleanLine) {
         int i = 0;
-        while (cleanLine.charAt(i) == ' ') {
+        // Should always be 0 but when running mock values it includes unwanted \n
+        int lineBreakCount = 0;
+        while (cleanLine.charAt(i) == ' ' || cleanLine.charAt(i) == '\n') {
+            if (cleanLine.charAt(i) == '\n') {
+                lineBreakCount++;
+            }
             i++;
+            if (i == cleanLine.length()) break;
         }
-        return i;
+        return i - lineBreakCount;
+    }
+
+    private static StringBuilder indent(int tabCount, boolean asSpaces) {
+        final StringBuilder builder = new StringBuilder();
+        if (asSpaces) {
+            builder.append("    ".repeat(Math.max(0, tabCount)));
+        } else {
+            builder.append("\t".repeat(Math.max(0, tabCount)));
+        }
+        return builder;
     }
 
 }

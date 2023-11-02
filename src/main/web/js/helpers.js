@@ -130,6 +130,17 @@ function Tag(name) {
         }
         return this;
     }
+    this.children = function(collection, filterFunction, commonTagForEachCollectionItem) {
+        for (let i = 0 ; i < collection.length ; i++) {
+            const item = collection[i];
+            if (filterFunction(item)) {
+                const elem = commonTagForEachCollectionItem(item);
+                console.log(elem);
+                this.tag.appendChild(elem.tag);
+            }
+        }
+        return this;
+    }
     this.text = function(txt) {
         this.tag.innerHTML = text;
         return this;
