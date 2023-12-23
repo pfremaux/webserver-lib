@@ -68,7 +68,7 @@ body {
                     console.log(script);
                     removeAllChildren("renderingId");
                     document.getElementById("generatedCodeId").value = script;
-                    eval("("+script+")")("renderingId", "param1");
+                    eval("("+script+")")("renderingId", {obj:['a', 'b']});
                 });
 
             }

@@ -131,6 +131,7 @@ function Tag(name) {
         return this;
     }
     this.children = function(collection, filterFunction, commonTagForEachCollectionItem) {
+        console.log(JSON.stringify(collection));
         for (let i = 0 ; i < collection.length ; i++) {
             const item = collection[i];
             if (filterFunction(item)) {

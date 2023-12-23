@@ -141,4 +141,9 @@ public class NodeV2<T> {
     public NodeV2<T> addSibling(T value) {
         return getParent().addLeaf(value);
     }
+
+    //This class first expected nodes to not hold values, just other branches. But after more practice it's more convenient for nodes to also hold a value
+    public void setValue(T val) {
+        this.value = val;
+    }
 }

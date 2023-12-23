@@ -3,6 +3,7 @@ package webserver.example;
 import tools.MdDoc;
 import webserver.EmptyBody;
 import webserver.annotations.Endpoint;
+import webserver.annotations.Role;
 import webserver.example.todo.Todo;
 import webserver.example.todo.TodoCreationRequest;
 import webserver.example.todo.TodoListResponse;
@@ -15,7 +16,7 @@ public class MyEndpoints {
 
     @Endpoint(path = "/toto", method = "GET")
     @MdDoc(description = "My description!!!")
-    // TODO PFR remettre @Role(value = "coucou")
+    @Role(value = "coucou")
     public Body go(Map<String, List<String>> headers, Body body) {
         return new Body("reponse");
     }

@@ -8,6 +8,13 @@ import java.util.Map;
 public class EndpointsConverter {
     @Endpoint(method = "POST", path = "/convert/html-script/js")
     public JsScriptResponse htmlScriptToJs(Map<String, Object> header, ScriptRequest body) {
-        return new JsScriptResponse(JsToHtmlCreator.convert(body.getScript()));
+        final String converted;
+        try {
+            converted = JsToHtmlCreator.convert(body.getScript());
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw t;
+        }
+        return new JsScriptResponse(converted);
     }
 }

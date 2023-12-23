@@ -63,12 +63,21 @@
     }
 function test(containerId, test) {
 	const container = document.getElementById(containerId);
+	const testss = { titles: [ { main:'coucou' }, { main:'coucou2' } ]};
     return appendTo(container,
         st('h1', 'test reel'),
         st('label', 'Label').andDo(tag => {tag.forid='montext';}),
         st('input').andDo(tag => {tag.id='montext';}),
         dt('button', evt => save()).andDo(tag => {tag.innerHTML='fdffd';}),
-        st('ul').children(['coucou', 'coucou2'], e=>true, item => st('li', item))
+        //
+        // ===================
+        // %test.list e.titles
+        //      li
+        //          h1 e.main
+        // =====================
+        // st('ul').children(elem.map(e=> e.title), e=>true, item => st('li', item).child('h1', item))
+        //st('ul').children(['coucou', 'coucou2'], e=>true, item => st('li', item))
+        st('ul').children(testss.titles.map(e=>e.main), e=>true, (c=>st('li', c)) )
     );
 }
 

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../sidePanel.css">
+    <script src="../js/helpers.js"></script>
+    <script src="../js/formCreator.js"></script>
+    <script src="../js/sidePanel.js"></script>
+    <style>
+
+        .wrapper {
+            display: grid;
+            grid-template-columns: 1fr 4fr 1fr;
+            grid-template-rows: 100px 100px;
+            grid-gap: 4px;
+        }
+
+
+        .wrapper-2 {
+            display: grid;
+            grid-template-columns: 8fr 1fr;
+            grid-template-rows: 100px 100px;
+            grid-gap: 4px;
+        }
+
+        .panel-left {
+            grid-column: 1;
+            grid-row:1;
+        }
+
+        .panel-left {
+            grid-column: 2;
+            grid-row:1;
+        }
+
+        .panel-right {
+            grid-column: 1;
+            grid-row:1;
+        }
+
+        .file-container {
+             display: flex;
+             flex-wrap: wrap;
+        }
+
+        .vignette {
+            /*
+            flex: <flex-grow> <flex-shrink> <flex-basis>
+                   no			no 			  size expected
+            */
+            flex:0 0 150px;
+            text-align:center;
+        }
+
+        .vignette-img-min {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+        }
+
+        .vignette-filename {
+            cursor: pointer;
+        }
+
+
+        .vignette-actions {
+
+        }
+
+
+        .vignette-action-picto {
+            cursor: pointer;
+            letter-spacing: 5px;
+            display: contents;
+            border-style: dotted;
+        }
+
+
+    </style>
+
+</head>
+<body>
+
+<script>
+    function showMenu(idContainer) {
+        let container = id(idContainer);
+        let link = new Element('a').withText('Explore').get();
+        link.href="https://google.ca";
+        container.appendChild(link);
+    }
+
+    function DrawingState() {
+        this.buttonPress = false;
+        /*imgTag.addEventListener('keydown', (e) => {
+            this.buttonPress = true;
+        });
+        imgTag.addEventListener('keyup', (e) => {
+            this.buttonPress = false;
+        });*/
+        this.xDown = -1;
+        this.yDown = -1;
+        this.xUp = -1;
+        this.yUp = -1;
+        this.clear = function() {
+            this.xDown = -1;
+            this.yDown = -1;
+            this.xUp = -1;
+            this.yUp = -1;
+        };
+    }
+
+
+
+    function showEditFile(idContainer, filePath) {
+        removeAllChildren(idContainer);
+        hide('panel-left');
+        //hide('panel-right');
+
+        var canvas = el('canvas');
+        var largeur_canvas = 700;
+        var hauteur_canvas = 700;
+        canvas.width = largeur_canvas;
+        canvas.height = hauteur_canvas;
+        var ctx = canvas.getContext('2d');
+        var spriteSheet = new Image();
+        spriteSheet.src = filePath;
+        ctx.drawImage(spriteSheet, 0, 0, spriteSheet.width, spriteSheet.height);
+        let ds = new DrawingState();
+        /*document.addEventListener('mousedown', (e) => {
+            ds.xDown = e.pageX;
+            ds.yDown = e.pageY;
+            log('x down: '+ds.xDown);
+            log('y down: '+ds.yDown);
+        });
+        document.addEventListener('mouseup', (e) => {
+            ds.xUp = e.pageX;
+            ds.yUp = e.pageY;
+            log('x up: '+ds.xUp);
+            log('y up: '+ds.yUp);
+        });*/
+
+        let container = id(idContainer);
+        container.appendChild(canvas);
+        id('mainContainer').className = 'wrapper-2';
+    }
+
+    function showFiles(idContainer) {
+        let container = id(idContainer);
+        let itemsContainer = el('div');
+        itemsContainer.className = "file-container";
+        for(let i = 0 ; i < 6 ; i++) {
+            let v = vignette('picto.png', 'file '+i, ["U", "D"], e=> showEditFile(idContainer, 'picto.png'));
+            itemsContainer.appendChild(v);
+        }
+        container.appendChild(itemsContainer);
+    }
+
+    function pictoCharAction(car, action) {
+        let div = el('div');
+        div.className="vignette-action-picto";
+        div.innerHTML = car
+        div.onclick = action;
+        return div;
+    }
+
+    function vignette(imgSrc, title, actions, clickAction) {
+        let vignette = el("div");
+        vignette.className = "vignette";
+        let imageContainer = el("div");
+        let image = el('img');
+        image.src = imgSrc;
+        image.className = "vignette-img-min";
+        image.onclick = clickAction;
+        imageContainer.appendChild(image);
+
+        let titleContainer = new Element("div").withText(title).get();
+        titleContainer.className= "vignette-filename";
+        titleContainer.onclick = clickAction;
+
+        let actionsContainer = el("div");
+        actionsContainer.className = "vignette-actions";
+        let picto = pictoCharAction('🗑', e => {
+            if (confirm('Are you sure to delete '+title+' ?')) {
+                // TODO perform server action
+                vignette.parentNode.removeChild(vignette);
+            }
+        });
+
+        actionsContainer.appendChild(picto);
+        picto = pictoCharAction('✍', e => {
+            // TODO perform server action
+
+        });
+        actionsContainer.appendChild(picto);
+
+        vignette.appendChild(imageContainer);
+        vignette.appendChild(titleContainer);
+        vignette.appendChild(actionsContainer);
+        return vignette;
+    }
+
+    function showFileMetaData(idContainer, metaData) {
+        let container = id(idContainer);
+        // TODO deal with metadata
+    }
+
+    function showContext(idContainer) {
+        let container = id(idContainer);
+        new InputForm("idCurrentPath", {label: "Current path:", type:"text"})
+            .withValue('/rep1/rep2')
+            .disabled()
+            .insertIn(container);
+        new InputForm("idRoles", {label: "Roles:", type:"text"})
+            .withValue('admin, user')
+            .disabled()
+            .insertIn(container);
+    }
+
+</script>
+
+<div class="wrapper" id="mainContainer">
+    <div id="panel-left">
+    </div>
+    <div id="panel-center">
+
+    <div id="panel-right">
+    </div>
+</div>
+</div>
+
+<script>
+    showMenu('panel-left');
+    showFiles('panel-center');
+    showContext('panel-right')
+
+</script>
+
+</body>
+</html>

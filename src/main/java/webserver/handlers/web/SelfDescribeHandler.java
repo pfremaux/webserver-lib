@@ -7,6 +7,7 @@ import webserver.handlers.WebHandlerUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -33,6 +34,7 @@ public class SelfDescribeHandler implements HttpHandler {
 
     public SelfDescribeHandler(List<DocumentedEndpoint> endpointsDoc) {
         final StringBuilder builder = new StringBuilder();
+        endpointsDoc.sort(Comparator.comparing(DocumentedEndpoint::getPath));
         int counter = 1;
         for (DocumentedEndpoint doc : endpointsDoc) {
             prepareHtmlDisplay(builder, doc, counter++);
