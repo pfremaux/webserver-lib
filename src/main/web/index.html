@@ -4,24 +4,28 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script src="/lib.js"></script>
+    <script src="/js/helpers.js"></script>
+    <script>
+        function search() {
+            const criteria = id("searchText").value;
+
+        }
+    </script>
+    <style>
+        body {
+            background-color: #333333;
+            text-color: cyan;
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <h3>Search</h3>
+        <input id="searchText" type="text"/>
+        <button onclick="search()">Search</button>
+    </header>
+    <div id="result">
 
-<div id="containerId"></div>
-
-<div id="debugId"></div>
-
-<script>
-   const container = document.getElementById("containerId");
-    listAction(ev => {
-        let obj = JSON.parse(ev);
-        console.log(obj.actions.length);
-    });
-    /*addAction("test echo", "echo Hello world", e=> {
-
-    });*/
-
-</script>
-
+    </div>
 </body>
 </html>
