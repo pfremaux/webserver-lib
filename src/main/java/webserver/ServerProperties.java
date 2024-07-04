@@ -96,7 +96,15 @@ public enum ServerProperties {
     }
 
     public Optional<String> getValue() {
-        return Optional.ofNullable(System.getProperty(key, value));
+        return Optional
+                .ofNullable(System.getProperty(key, value))
+                .map(value -> {
+                    if ("$env".equals(value)) {
+                        final String upperCase = key.replaceAll("\\.", "_").toUpperCase();
+                        return System.getenv(upperCase);
+                    }
+                    return value;
+                });
     }
 
     public Optional<Boolean> asBoolean() {
@@ -104,7 +112,8 @@ public enum ServerProperties {
     }
 
     public Optional<Integer> asInteger() {
-        return getValue().map(Integer::getInteger);
+        Optional<String> value1 = getValue();
+        return value1.map(Integer::parseInt);
     }
 
     public String getDescription() {

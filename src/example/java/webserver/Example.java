@@ -5,6 +5,8 @@ import webserver.example.endpointslist.EndpointData;
 import webserver.example.endpointslist.EndpointList;
 import webserver.example.endpointslist.EndpointLister;
 import webserver.generators.DocumentedEndpoint;
+import webserver.handlers.ConfigHandler;
+import webserver.handlers.ServerHandler;
 import webserver.handlers.web.auth.AccountsHandler;
 import webserver.handlers.web.auth.AuthenticationHandler;
 
@@ -24,6 +26,9 @@ public class Example {
 
     public static void main(String[] args) throws IOException, UnrecoverableKeyException, CertificateException,
             NoSuchAlgorithmException, KeyStoreException, KeyManagementException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        ConfigHandler.loadConfigFile("server-config.properties");
+        //System.out.println(ServerProperties.LISTENING_PORT.getValue().get());
+        //System.exit(-1);
         final AuthenticationHandler authenticationHandler = new AuthenticationHandler(
                 (String login, byte[] hashed) -> AccountsHandler.validateAndGetAccount(login, hashed)
                         .map(account -> new AuthenticationHandler.AuthenticationResult(login, true, null, account.roles()))
