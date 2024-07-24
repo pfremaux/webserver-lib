@@ -156,6 +156,11 @@ public class JsonMapper {
                 } else if (readingMode == ReadingMode.VALUE) {
                     currentValueBeingBuilt.append(c);
                 } else if (!isReadingObject) {
+                    // Here, we're dealing with a non string. Parser didn't detect any special character to say it's a value. Therefore, we have the separator ':' in the buffer
+                    // we must delete it.
+                    if (currentValueBeingBuilt.charAt(0) == ':') {
+                        currentValueBeingBuilt.deleteCharAt(0);
+                    }
                     currentValueBeingBuilt.append(c);
                 } else if (readingMode == ReadingMode.WAITING_FOR_VALUE && c != ' ') {
                     isTypeNumber = true;
@@ -168,6 +173,8 @@ public class JsonMapper {
             String s = currentValueBeingBuilt.toString();
             if (tClass.getSimpleName().equals("int") || tClass.getSimpleName().equals("Integer")) {
                 return (T) Integer.valueOf(s);
+            } else if (tClass.getSimpleName().equals("double") || tClass.getSimpleName().equals("Double")) {
+                return (T) Double.valueOf(s);
             } else if (tClass.getSimpleName().equals("Long")) {
                 return (T) Long.valueOf(s);
             } else if (tClass.getSimpleName().equals("String")) {

@@ -38,11 +38,21 @@ public class WebHandlerUtils {
     public static void buildValidResponseAndClose(
             @MdDoc(description = "HttpExchange instance provided directly the interface HttpHandler") HttpExchange exchange,
             @MdDoc(description = "The full body response, commonly we're returning a JSON format.") String responseText) throws IOException {
-        exchange.sendResponseHeaders(200, responseText.length());
-        exchange.getResponseHeaders().add("Content-Type", "text/json");
-        final OutputStream os = exchange.getResponseBody();
-        os.write(responseText.getBytes());
-        os.close();
-        exchange.getResponseBody().close();
+        if (responseText != null) {
+            exchange.sendResponseHeaders(200, responseText.length());
+            exchange.getResponseHeaders().add("Content-Type", "text/json");
+            final OutputStream os = exchange.getResponseBody();
+            os.write(responseText.getBytes());
+            os.close();
+            exchange.getResponseBody().close();
+        } else {
+            exchange.sendResponseHeaders(200, "error".length());
+            exchange.getResponseHeaders().add("Content-Type", "text/json");
+            final OutputStream os = exchange.getResponseBody();
+            os.write("error".getBytes());
+            os.close();
+            exchange.getResponseBody().close();
+        }
+
     }
 }
