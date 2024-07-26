@@ -99,14 +99,14 @@ public class ServeFileHandler implements HttpHandler {
             }
             final String fileURL = (endpointRelativePath + relativeFilePath + "/" + file.getName()).replaceAll("\s", "%20");
             builder.append("<li><a href=\"");
-            builder.append(fileURL);
+            builder.append(file.getName().endsWith(".mp4") ?fileURL.replace("/web/", "/watch/"): fileURL); // TODO PFR duplicate action. Factoriser
             if (file.isDirectory()) {
                 builder.append("/*");
             }
             builder.append("\">");
-            builder.append(endpointRelativePath);
-            builder.append(relativeFilePath);
-            builder.append("/");
+            //builder.append(endpointRelativePath);
+            //builder.append(relativeFilePath);
+            //builder.append("/");
             builder.append(file.getName());
             builder.append("</a>");
 
@@ -142,34 +142,34 @@ public class ServeFileHandler implements HttpHandler {
 
     private void addUtilityFunctions(StringBuilder builder) {
         builder.append("<script>");
-        builder.append(  """
-function insertVideo(id, url) {
-    let videoTag = document.createElement('video');
-    videoTag.id = id+".id";
-    videoTag.playsinline = "";
-    videoTag.autoplay="autoplay";
-     videoTag.muted="muted";
-      videoTag.loop="loop";
-      videoTag.controls="controls";
-      videoTag.style.width="640px";
-      videoTag.style.height="480px";
-       videoTag.type="video/mp4";
-    videoTag.src = url;
-    document.getElementById(id).appendChild(videoTag);
-    
-     let buttonTag = document.createElement('button');
-     buttonTag.onclick = e => removeAllChildren(id);
-     buttonTag.innerHTML = 'X';
-     document.getElementById(id).appendChild(buttonTag);
-}
+        builder.append("""
+                function insertVideo(id, url) {
+                    let videoTag = document.createElement('video');
+                    videoTag.id = id+".id";
+                    videoTag.playsinline = "";
+                    videoTag.autoplay="autoplay";
+                     videoTag.muted="muted";
+                      videoTag.loop="loop";
+                      videoTag.controls="controls";
+                      videoTag.style.width="640px";
+                      videoTag.style.height="480px";
+                       videoTag.type="video/mp4";
+                    videoTag.src = url;
+                    document.getElementById(id).appendChild(videoTag);
+                    
+                     let buttonTag = document.createElement('button');
+                     buttonTag.onclick = e => removeAllChildren(id);
+                     buttonTag.innerHTML = 'X';
+                     document.getElementById(id).appendChild(buttonTag);
+                }
 
-function removeAllChildren(i) {
-	const myNode = document.getElementById(i);
-	while (myNode.lastElementChild) {
-		myNode.removeChild(myNode.lastElementChild);
-	}
-}
-""");
+                function removeAllChildren(i) {
+                	const myNode = document.getElementById(i);
+                	while (myNode.lastElementChild) {
+                		myNode.removeChild(myNode.lastElementChild);
+                	}
+                }
+                """);
         builder.append("</script>");
     }
 

@@ -1,0 +1,60 @@
+<head>
+    <script src="/lib.js"></script>
+</head>
+<body>
+<script>
+function insertVideo(id, url) {
+    let videoTag = document.createElement('video');
+    videoTag.id = id+".id";
+    videoTag.playsinline = "";
+    videoTag.autoplay="autoplay";
+    videoTag.muted="muted";
+    videoTag.loop="loop";
+    videoTag.controls="controls";
+    videoTag.style.width="640px";
+    videoTag.style.height="480px";
+    videoTag.type="video/mp4";
+    videoTag.src = url;
+    document.getElementById(id).appendChild(videoTag);
+
+    let buttonTag = document.createElement('button');
+    buttonTag.onclick = e => removeAllChildren(id);
+    buttonTag.innerHTML = 'X';
+    document.getElementById(id).appendChild(buttonTag);
+}
+
+function removeAllChildren(i) {
+    const myNode = document.getElementById(i);
+    while (myNode.lastElementChild) {
+        myNode.removeChild(myNode.lastElementChild);
+    }
+}
+
+    function extractFrameInfo() {
+        const videoTag = document.getElementById('idVideo'+'.id');
+        let time = videoTag.currentTime;
+        console.log(time);
+        extractFrame('', time, e => {
+            let obj = JSON.parse(e);
+            // console.log(obj.base64Image);
+            let imageDivTag = document.getElementById('idPic1');
+            let imgTag = document.createElement("img");
+            imgTag.setAttribute('src', "data:image/jpg;base64," + obj.base64Image);
+            imageDivTag.appendChild(imgTag);
+        });
+    }
+</script>
+
+<div id="idVideo"></div>
+
+<div id="idPic1"></div>
+<div id="idPic2"></div>
+
+<button onclick="extractFrameInfo()">extract video info</button>
+
+<script>
+    insertVideo('idVideo', '/watch/video.mp4');
+</script>
+
+
+</body>
