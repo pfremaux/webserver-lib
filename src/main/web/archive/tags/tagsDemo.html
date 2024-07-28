@@ -1,0 +1,36 @@
+<head>
+    <script src="/lib.js"></script>
+    <link rel="stylesheet" href="tags.css">
+</head>
+<body>
+
+<div id="container"><span id="tagContainer"></span>
+    <input type="text" id="inputText" placeholder="input here.." />
+</div>
+<p>
+    press "space" to be tagged..
+</p>
+
+<script>
+    let inputT = document.getElementById("inputText");
+    inputT.onkeypress = (evt) => {
+        if (event.which == 13) {
+          event.preventDefault();
+        } else if (event.which == 32) {
+          event.preventDefault();
+          let tagContainer = document.getElementById("tagContainer");
+          let span = document.createElement("span");
+          span.classList.add("tag");
+          span.innerHTML = inputT.value;
+          let deleteTag = document.createElement("a");
+          deleteTag.href = "#";
+          deleteTag.onclick = (e) => tagContainer.removeChild(span);
+          deleteTag.innerHTML = "X";
+          span.appendChild(deleteTag);
+          tagContainer.appendChild(span);
+          inputT.value = "";
+        }
+    }
+</script>
+
+</body>

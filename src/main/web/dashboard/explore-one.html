@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Carousel</title>
     <link rel="stylesheet" href="../css/explore-one.css">
+    <link rel="stylesheet" href="/web/js/cmpt/tags/tagComponent.css">
     <script src="/lib.js"></script>
+    <script src="/web/js/cmpt/tags/tagComponent.js"></script>
 </head>
 <body>
 <div class="carousel-container">
@@ -16,6 +18,8 @@
         <span class="arrow right" onclick="nextImage()">&#9654;</span>
     </div>
 </div>
+<div id="tagsComponentContainer"></div>
+<button onclick="saveTags()">Update tags</button>
 
 <script>
     let currentImageIndex = 0;
@@ -36,7 +40,7 @@
         showImage(currentImageIndex);
     }
 
-    function insertVideo(id, url) {
+function insertVideo(id, url) {
     let videoTag = document.createElement('video');
     videoTag.id = id+".id";
     videoTag.playsinline = "";
@@ -67,6 +71,17 @@
         const obj = JSON.parse(e);
         insertVideo('idVideo', obj.path);
     });
+
+
+    let listTags = [];
+    buildTagComponent("tagsComponentContainer", "tagContainerId", "tagInputTextId", value => listTags.push(value));
+
+    function saveTags() {
+        setFileTags(window.videoKey, listTags, e => {
+            //
+            const obj = JSON.parse(e);
+        });
+    }
 
 </script>
 </body>

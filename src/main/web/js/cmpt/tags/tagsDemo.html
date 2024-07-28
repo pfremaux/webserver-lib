@@ -1,0 +1,16 @@
+<head>
+    <script src="tagComponent.js"></script>
+    <link rel="stylesheet" href="tagComponent.css">
+</head>
+<body>
+
+<div id="container"></div>
+
+<button onclick="console.log(listTags)">dump tags</button>
+
+<script>
+let listTags = [];
+buildTagComponent("container", "pfrTagcontainerid", "pfrinputtextid", value => listTags.push(value));
+</script>
+
+</body>

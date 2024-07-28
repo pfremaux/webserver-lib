@@ -1,0 +1,16 @@
+.tag {
+  padding: 5px;
+  background: aliceblue;
+  border: deepskyblue 1px solid;
+  border-radius: 5px;
+}
+
+.tagInputText {
+  border: none;
+  background: none;
+}
+
+.mainContainer {
+  background: white;
+	padding: 10px;
+}

@@ -359,7 +359,7 @@ public class JsonMapper {
                 builder.append(value);
                 builder.append("\"");
             }
-            case "ListN","List12", "ArrayList" -> {
+            case "ListN","List12", "ArrayList", "UnmodifiableRandomAccessList" -> {
 
                 List<Object> lst = (List<Object>) value;
                 builder.append("[");

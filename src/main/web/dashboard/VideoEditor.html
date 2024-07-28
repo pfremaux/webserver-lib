@@ -3,12 +3,6 @@
 </head>
 <body>
 <script>
-function removeAllChildren(i) {
-	const myNode = document.getElementById(i);
-	while (myNode.lastElementChild) {
-		myNode.removeChild(myNode.lastElementChild);
-	}
-}
 function insertVideo(id, url) {
     let videoTag = document.createElement('video');
     videoTag.id = id+".id";

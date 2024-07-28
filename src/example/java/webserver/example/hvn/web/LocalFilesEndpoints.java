@@ -39,7 +39,8 @@ public class LocalFilesEndpoints {
                 final String image2RelativePath = toRelativePath(metadataFolder, "image2.jpg");
                 final FileMetadata metadata = new FileMetadata(
                         image1RelativePath,
-                        image2RelativePath
+                        image2RelativePath,
+                        List.of()
                 );
                 result.add(new SimpleFileInfo(fileIndexedForManifest.key(), fileLocation.getFileName().toString(), metadata));
             }
@@ -51,9 +52,13 @@ public class LocalFilesEndpoints {
 
     @Endpoint(method = "POST", path = "/video/info")
     public VideoInfoResponse GetVideoInfo(Map<String, Object> headers, VideoInfoRequest videoInfoRequest) {
-        final String absolutePath = cache.get(videoInfoRequest.getKey()).absolutePath();
+        final FileIndexedForManifest fileIndexedForManifest = cache.get(videoInfoRequest.getKey());
+        final String absolutePath = fileIndexedForManifest.absolutePath();
         final Path filePath = Path.of(absolutePath);
-        return new VideoInfoResponse(toRelativePath(filePath.getParent(), filePath.getFileName().toString()));
+
+        return new VideoInfoResponse(
+                toRelativePath(filePath.getParent(), filePath.getFileName().toString()),
+                fileIndexedForManifest.tags);
     }
 
     private String toRelativePath(Path metadataFolder, String fileName) {
@@ -75,7 +80,16 @@ public class LocalFilesEndpoints {
         return (basePath + relativeWebFilePath);
     }
 
-    public record FileIndexedForManifest(String key, String absolutePath) {
+    public record FileIndexedForManifest(String key, String absolutePath, List<String> tags) {
+        public FileIndexedForManifest {
+            Objects.requireNonNull(key);
+            Objects.requireNonNull(absolutePath);
+            tags = Collections.unmodifiableList(tags);
+        }
+
+        public FileIndexedForManifest withReplacedTags(List<String> tags) {
+            return new FileIndexedForManifest(key, absolutePath, tags);
+        }
     }
 
     @Endpoint(method = "GET", path = "/scan")
@@ -87,12 +101,18 @@ public class LocalFilesEndpoints {
                     .filter(path -> path.toFile().isFile())
                     .map(path -> path.toAbsolutePath().toString())
                     .filter(path -> path.endsWith(".mp4")) // TODO PFr improve filter
-                    .map(absolutePath -> new FileIndexedForManifest(toSHA1(absolutePath), absolutePath))
+                    .map(absolutePath -> new FileIndexedForManifest(toSHA1(absolutePath), absolutePath, List.of()))
                     .map(this::createMetadataFolder)
                     .collect(Collectors.toMap(FileIndexedForManifest::key, Function.identity()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Endpoint(method = "POST", path = "/file/tags/set")
+    public void setFileTags(Map<String, Object> headers, SetFileTagRequest setFileTagRequest) {
+        FileIndexedForManifest fileIndexedForManifest = cache.get(setFileTagRequest.getKey());
+        cache.put(setFileTagRequest.getKey(), fileIndexedForManifest.withReplacedTags(setFileTagRequest.getTags()));
     }
 
     private FileIndexedForManifest createMetadataFolder(FileIndexedForManifest manifestFileDatum) {
