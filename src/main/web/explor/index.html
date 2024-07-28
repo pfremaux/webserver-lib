@@ -149,7 +149,7 @@
         let itemsContainer = el('div');
         itemsContainer.className = "file-container";
         for(let i = 0 ; i < 6 ; i++) {
-            let v = vignette('picto.png', 'file '+i, ["U", "D"], e=> showEditFile(idContainer, 'picto.png'));
+            let v = vignette('img.png', 'file '+i, ["U", "D"], e=> showEditFile(idContainer, 'img.png'));
             itemsContainer.appendChild(v);
         }
         container.appendChild(itemsContainer);

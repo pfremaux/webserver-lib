@@ -15,7 +15,6 @@
     grid-gap: 4px;
 }
 
-
 .wrapper-2 {
     display: grid;
 	grid-template-columns: 8fr 1fr;
@@ -62,11 +61,9 @@
 	cursor: pointer;
 }
 
-
 .vignette-actions {
 	
 }
-
 
 .vignette-action-picto {
 	cursor: pointer;
@@ -75,9 +72,7 @@
 	border-style: dotted;
 }
 
-
     </style>
-
 </head>
 <body>
 
@@ -108,8 +103,6 @@ function DrawingState() {
         this.yUp = -1;
     };
 }
-
-
 
 function showEditFile(idContainer, filePath) {
 	removeAllChildren(idContainer);
@@ -216,6 +209,7 @@ function showContext(idContainer) {
 		.insertIn(container);
 }
 
+
 </script>
 
 <div class="wrapper" id="mainContainer">
@@ -237,8 +231,7 @@ function showContext(idContainer) {
 <script>
 showMenu('panel-left');
 showFiles('panel-center');
-showContext('panel-right')
-
+showContext('panel-right');
 </script>
 
 </body>
