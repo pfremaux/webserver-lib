@@ -1,9 +1,15 @@
-package webserver.example.hvn.web;
+package webserver.example.hvn.web.models;
+
+import webserver.annotations.JsonField;
 
 public class Pagination {
+    @JsonField
     private final int indexStart;
+    @JsonField
     private final int indexEnd;
+    @JsonField
     private final int currentPage;
+    @JsonField
     private final int maxPage;
 
     public Pagination(int indexStart, int indexEnd, int currentPage, int maxPage) {

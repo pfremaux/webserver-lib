@@ -1,6 +1,6 @@
 package webserver.example.hvn.dao;
 
-import webserver.example.hvn.web.Video;
+import webserver.example.hvn.web.models.Video;
 
 import java.util.ArrayList;
 import java.util.List;

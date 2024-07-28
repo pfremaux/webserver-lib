@@ -3,6 +3,12 @@
 </head>
 <body>
 <script>
+function removeAllChildren(i) {
+	const myNode = document.getElementById(i);
+	while (myNode.lastElementChild) {
+		myNode.removeChild(myNode.lastElementChild);
+	}
+}
 function insertVideo(id, url) {
     let videoTag = document.createElement('video');
     videoTag.id = id+".id";
@@ -34,7 +40,7 @@ function removeAllChildren(i) {
         const videoTag = document.getElementById('idVideo'+'.id');
         let time = videoTag.currentTime;
         console.log(time);
-        extractFrame('', time, e => {
+        extractFrame(window.videoKey, time, e => {
             let obj = JSON.parse(e);
             // console.log(obj.base64Image);
             let imageDivTag = document.getElementById('idPic1');
@@ -43,17 +49,37 @@ function removeAllChildren(i) {
             imageDivTag.appendChild(imgTag);
         });
     }
+
+    function saveFrameIndex(index) {
+        saveFrame(index, window.videoKey, e => {
+        // {'result':1}
+            const obj = JSON.parse(e);
+            removeAllChildren("idPic1");
+        });
+    }
 </script>
 
 <div id="idVideo"></div>
 
 <div id="idPic1"></div>
-<div id="idPic2"></div>
 
 <button onclick="extractFrameInfo()">extract video info</button>
+<button onclick="saveFrameIndex(1)">Save as image1</button>
+<button onclick="saveFrameIndex(2)">Save as image2</button>
 
 <script>
-    insertVideo('idVideo', '/watch/video.mp4');
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+      get: (searchParams, prop) => searchParams.get(prop),
+    });
+    // Get the value of "some_key" in eg "https://example.com/?some_key=some_value"
+    let value = params.key; // "some_value"
+    window.videoKey = value;
+    GetVideoInfo(value, e => {
+        // {'path':1}
+        const obj = JSON.parse(e);
+        insertVideo('idVideo', obj.path);
+    });
+
 </script>
 
 

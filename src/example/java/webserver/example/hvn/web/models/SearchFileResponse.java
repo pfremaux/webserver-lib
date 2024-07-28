@@ -1,18 +1,17 @@
-package webserver.example.hvn.web;
+package webserver.example.hvn.web.models;
 
 import webserver.annotations.JsonField;
-import webserver.annotations.JsonParameter;
 
 import java.util.List;
 
-public class SearchTextResponse {
+public class SearchFileResponse {
     @JsonField
     private final Pagination pagination;
-
     @JsonField
-    private final List<Video> files;
+    private final List<SimpleFileInfo> files;
 
-    public SearchTextResponse(Pagination pagination, List<Video> files) {
+
+    public SearchFileResponse(Pagination pagination, List<SimpleFileInfo> files) {
         this.pagination = pagination;
         this.files = files;
     }
@@ -21,7 +20,7 @@ public class SearchTextResponse {
         return pagination;
     }
 
-    public List<Video> getFiles() {
+    public List<SimpleFileInfo> getFiles() {
         return files;
     }
 }

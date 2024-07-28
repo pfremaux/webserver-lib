@@ -32,7 +32,9 @@ public class ServeFileHandler implements HttpHandler {
         final URI requestURI = exchange.getRequestURI();
         LogUtils.debug("Requested URI : %s", requestURI.getPath());
         LogUtils.debug("Endpoint path %s", endpointRelativePath);
-        final String relativeFilePath = requestURI.toString().substring(endpointRelativePath.length());
+        final String relativeFilePathWithQueryParameters = requestURI.toString().substring(endpointRelativePath.length());
+        int queryParameterSeparator = relativeFilePathWithQueryParameters.lastIndexOf("?");
+        final String relativeFilePath = queryParameterSeparator == -1 ? relativeFilePathWithQueryParameters : relativeFilePathWithQueryParameters.substring(0, queryParameterSeparator);
         LogUtils.debug("Relative file path %s", relativeFilePath);
         LogUtils.debug("Base dir path %s", baseDir);
         final String filePath = (baseDir.toFile().getAbsolutePath() + relativeFilePath).replaceAll("%20", " ");

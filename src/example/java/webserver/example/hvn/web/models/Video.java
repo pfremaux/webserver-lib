@@ -1,4 +1,4 @@
-package webserver.example.hvn.web;
+package webserver.example.hvn.web.models;
 
 import webserver.annotations.JsonField;
 

@@ -158,7 +158,7 @@ public class JsonMapper {
                 } else if (!isReadingObject) {
                     // Here, we're dealing with a non string. Parser didn't detect any special character to say it's a value. Therefore, we have the separator ':' in the buffer
                     // we must delete it.
-                    if (currentValueBeingBuilt.charAt(0) == ':') {
+                    if (!currentValueBeingBuilt.isEmpty() && currentValueBeingBuilt.charAt(0) == ':') {
                         currentValueBeingBuilt.deleteCharAt(0);
                     }
                     currentValueBeingBuilt.append(c);

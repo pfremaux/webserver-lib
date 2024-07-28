@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Carousel</title>
+    <link rel="stylesheet" href="../css/explore-one.css">
+    <script src="/lib.js"></script>
+</head>
+<body>
+<div class="carousel-container">
+    <div class="carousel">
+        <span class="arrow left" onclick="prevImage()">&#9664;</span>
+        <!--<img id="carousel-image" src="image1.jpg" alt="Carousel Image">-->
+        <div id="idVideo"></div>
+        <span class="arrow right" onclick="nextImage()">&#9654;</span>
+    </div>
+</div>
+
+<script>
+    let currentImageIndex = 0;
+    let images = ["image1.jpg", "image2.jpg", "image3.jpg"];
+
+    function showImage(index) {
+        const imgElement = document.getElementById('carousel-image');
+        imgElement.src = images[index];
+    }
+
+    function prevImage() {
+        currentImageIndex = (currentImageIndex > 0) ? currentImageIndex - 1 : images.length - 1;
+        showImage(currentImageIndex);
+    }
+
+    function nextImage() {
+        currentImageIndex = (currentImageIndex < images.length - 1) ? currentImageIndex + 1 : 0;
+        showImage(currentImageIndex);
+    }
+
+    function insertVideo(id, url) {
+    let videoTag = document.createElement('video');
+    videoTag.id = id+".id";
+    videoTag.playsinline = "";
+    videoTag.autoplay="autoplay";
+    videoTag.muted="muted";
+    videoTag.loop="loop";
+    videoTag.controls="controls";
+    videoTag.style.width="640px";
+    videoTag.style.height="480px";
+    videoTag.type="video/mp4";
+    videoTag.src = url;
+    document.getElementById(id).appendChild(videoTag);
+
+    let buttonTag = document.createElement('button');
+    buttonTag.onclick = e => removeAllChildren(id);
+    buttonTag.innerHTML = 'X';
+    document.getElementById(id).appendChild(buttonTag);
+}
+
+
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+      get: (searchParams, prop) => searchParams.get(prop),
+    });
+    let value = params.key; // "some_value"
+    window.videoKey = value;
+    GetVideoInfo(value, e => {
+        // {'path':1}
+        const obj = JSON.parse(e);
+        insertVideo('idVideo', obj.path);
+    });
+
+</script>
+</body>
+</html>
