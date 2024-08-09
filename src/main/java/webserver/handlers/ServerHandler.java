@@ -4,6 +4,7 @@ import com.sun.net.httpserver.*;
 import tools.*;
 import tools.security.SimpleSecretHandler;
 import webserver.ServerProperties;
+import webserver.handlers.web.DefaultCssHandler;
 import webserver.handlers.web.VideoStreamingHandler;
 import webserver.generators.DocumentedEndpoint;
 import webserver.generators.endpoint.EndpointGenerator;
@@ -195,6 +196,10 @@ public class ServerHandler {
 
         if (ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().isPresent()) {
             handlers.put(ServerProperties.KEY_STREAM_VIDEO_ENDPOINT.getValue().get(), new VideoStreamingHandler());
+        }
+
+        if (ServerProperties.DEFAULT_CSS_RELATIVE_PATH.getValue().isPresent()) {
+            handlers.put(ServerProperties.DEFAULT_CSS_RELATIVE_PATH.getValue().get(), new DefaultCssHandler());
         }
     }
 

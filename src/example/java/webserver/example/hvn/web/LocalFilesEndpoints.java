@@ -3,7 +3,12 @@ package webserver.example.hvn.web;
 import tools.LogUtils;
 import webserver.ServerProperties;
 import webserver.annotations.Endpoint;
+import webserver.example.hvn.persistence.HvnDataAccess;
+import webserver.example.hvn.persistence.HvnDataAccessImpl;
 import webserver.example.hvn.web.models.*;
+import webserver.example.hvn.web.models.tags.GetFileTagRequest;
+import webserver.example.hvn.web.models.tags.GetFileTagResponse;
+import webserver.example.hvn.web.models.tags.SetFileTagRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,10 +26,24 @@ public class LocalFilesEndpoints {
     public static Map<String, FileIndexedForManifest> cache = new HashMap<>();
     private static int MAX_RESULT = 10;
 
+    private HvnDataAccess hvnDataAccess = new HvnDataAccessImpl();
+
     public static final String PATH_ROOT_SCAN = "/home/pierre/Download/";
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////                FILES
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Navigate through pages of files.
+     *
+     * @param headers
+     * @param searchTextRequest TODO use text search
+     * @return
+     */
     @Endpoint(method = "POST", path = "/search")
     public SearchFileResponse Search(Map<String, Object> headers, SearchTextRequest searchTextRequest) {
+        // TODO PFR replace with below final List<SimpleFileInfo> search = hvnDataAccess.search(searchTextRequest.getPage());
         int fileIndex = 0;
         // TODO PFr replace with database
         final List<SimpleFileInfo> result = new ArrayList<>();
@@ -50,6 +69,13 @@ public class LocalFilesEndpoints {
                 result);
     }
 
+    /**
+     * Get basic files info to initiate a streaming or display tags.
+     *
+     * @param headers
+     * @param videoInfoRequest
+     * @return
+     */
     @Endpoint(method = "POST", path = "/video/info")
     public VideoInfoResponse GetVideoInfo(Map<String, Object> headers, VideoInfoRequest videoInfoRequest) {
         final FileIndexedForManifest fileIndexedForManifest = cache.get(videoInfoRequest.getKey());
@@ -92,12 +118,16 @@ public class LocalFilesEndpoints {
         }
     }
 
+    /**
+     * Scan local file system and register files.
+     *
+     * @param headers
+     */
     @Endpoint(method = "GET", path = "/scan")
     public void Scan(Map<String, Object> headers) {
         try {
-
             cache = Files.find(Path.of(ServerProperties.KEY_STATIC_FILES_BASE_DIRECTORY.getValue().orElseThrow()), 5, (path, attrib) -> path.getFileName().toString().endsWith("mp4"))
-            //cache = Files.list(Path.of(ServerProperties.KEY_STATIC_FILES_BASE_DIRECTORY.getValue().orElseThrow()))
+                    //cache = Files.list(Path.of(ServerProperties.KEY_STATIC_FILES_BASE_DIRECTORY.getValue().orElseThrow()))
                     .filter(path -> path.toFile().isFile())
                     .map(path -> path.toAbsolutePath().toString())
                     .filter(path -> path.endsWith(".mp4")) // TODO PFr improve filter
@@ -109,11 +139,36 @@ public class LocalFilesEndpoints {
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////                TAGS
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Attach tags to a file.
+     * @param headers
+     * @param setFileTagRequest
+     */
     @Endpoint(method = "POST", path = "/file/tags/set")
     public void setFileTags(Map<String, Object> headers, SetFileTagRequest setFileTagRequest) {
         FileIndexedForManifest fileIndexedForManifest = cache.get(setFileTagRequest.getKey());
         cache.put(setFileTagRequest.getKey(), fileIndexedForManifest.withReplacedTags(setFileTagRequest.getTags()));
     }
+
+    /**
+     * Get tags from a file.
+     * @param headers
+     * @param getFileTagRequest
+     * @return
+     */
+    @Endpoint(method = "POST", path = "/file/tags/get")
+    public GetFileTagResponse getFileTags(Map<String, Object> headers, GetFileTagRequest getFileTagRequest) {
+        FileIndexedForManifest fileIndexedForManifest = cache.get(getFileTagRequest.getKey());
+        return new GetFileTagResponse(fileIndexedForManifest.tags);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////                Utilities
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private FileIndexedForManifest createMetadataFolder(FileIndexedForManifest manifestFileDatum) {
         Path pathFile = Path.of(manifestFileDatum.absolutePath);

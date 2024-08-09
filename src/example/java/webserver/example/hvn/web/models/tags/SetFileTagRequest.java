@@ -1,4 +1,4 @@
-package webserver.example.hvn.web.models;
+package webserver.example.hvn.web.models.tags;
 
 import webserver.annotations.JsonField;
 import webserver.annotations.JsonParameter;

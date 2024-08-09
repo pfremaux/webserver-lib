@@ -36,6 +36,15 @@ public enum ServerProperties {
             "/web",
             "Relative path on the server the client should prefix to access to static files " +
                     "(*.html, *.js, *.jpg). For example : /static"),
+
+    DEFAULT_CSS_RELATIVE_PATH(
+            "server.handler.default.css.relative.path",
+            "/css",
+            "Relative path to a css file"),
+    DEFAULT_CSS_FILE_PATH(
+            "server.handler.default.css.relative.path",
+            "./src/main/web/css/baseMobile.css",
+            "Relative path to a css file"),
     KEY_STATIC_FILES_BASE_DIRECTORY(
             "server.handler.static.files.base.directory",
             "./src/main/web",
