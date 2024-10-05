@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,6 +27,7 @@ public class ConfigHandler {
     public static final String CONFIG_FILE = "--config-file";
     public static final String GENERATE_PROPERTIES_PARAM = "gen-prop";
     public static final String ADD_ACCOUNT_PARAM = "add-account";
+    public static final String ADD_ENDPOINTS_PARAM = "add-endpoints";
 
 
     private ConfigHandler() {
@@ -67,6 +69,24 @@ public class ConfigHandler {
             System.setProperty(getPasswordKey(counter), Base64.getEncoder().encodeToString(hash));
             System.setProperty(getRolesKey(counter), roles);
             regeneratePropertiesFile();
+            SystemUtils.endOfApp();
+        } else if (providedParameters.contains(ADD_ENDPOINTS_PARAM)) {
+            final String packageClass = parameters.get(ADD_ENDPOINTS_PARAM);
+            int counter = 0;
+            final Set<String> registeredClasses = new HashSet<>();
+            String registeredClass;
+            while ((registeredClass = System.getProperty("server.handlers." + counter + ".endpoint.class")) != null) {
+                registeredClasses.add(registeredClass);
+                counter++;
+            }
+            final String propertiesFile = ServerProperties.KEY_CONFIG_FILE_PATH.mustGetValue();
+            if (registeredClasses.contains(packageClass)) {
+                LogUtils.info("The following class is already registered: {}", packageClass);
+                LogUtils.info("Nothing to do.");
+                SystemUtils.endOfApp();
+            }
+            final String propertyKey = "\nserver.handlers." + counter + ".endpoint.class=" + packageClass;
+            Files.write(Path.of(propertiesFile), propertyKey.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
             SystemUtils.endOfApp();
         }
     }

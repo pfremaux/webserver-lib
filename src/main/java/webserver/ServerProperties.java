@@ -2,6 +2,7 @@ package webserver;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public enum ServerProperties {
     LISTENING_PORT(
@@ -109,11 +110,21 @@ public enum ServerProperties {
                 .ofNullable(System.getProperty(key, value))
                 .map(value -> {
                     if ("$env".equals(value)) {
-                        final String upperCase = key.replaceAll("\\.", "_").toUpperCase();
+                        final String upperCase = getEnvironmentVariable();
                         return System.getenv(upperCase);
                     }
                     return value;
                 });
+    }
+    private String getEnvironmentVariable() {
+        return key.replaceAll("\\.", "_").toUpperCase();
+    }
+
+    public String mustGetValue() {
+        final Supplier<IllegalStateException> illegalStateExceptionSupplier = () -> new IllegalStateException("App read property %s and expected it to be set. But no value was found. You have to set the property. \n" +
+                "=> Edit file %s and set %s=<value> OR set environment variable %s=<value>".formatted(this.name(), this.key, this.getEnvironmentVariable()));
+        return getValue().orElseThrow(illegalStateExceptionSupplier);
+
     }
 
     public Optional<Boolean> asBoolean() {

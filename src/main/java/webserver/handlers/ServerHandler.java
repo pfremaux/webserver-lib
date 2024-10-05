@@ -81,7 +81,8 @@ public class ServerHandler {
                 SESSION_TOKEN_PWD, "Password token. It's the symmetric key used to encrypted the session..",//
                 ConfigHandler.GENERATE_PROPERTIES_PARAM, "Generate a default properties file", //
                 ConfigHandler.ADD_ACCOUNT_PARAM, "Add an account with password and roles in the properties file.", //
-                ConfigHandler.CONFIG_FILE, ".properties file to customize/enable functionalities." //
+                ConfigHandler.CONFIG_FILE, ".properties file to customize/enable functionalities.", //
+                ConfigHandler.ADD_ENDPOINTS_PARAM, "Add endpoints to the .properties config file by providing a package+class path." //
         ),
                 Map.of(/*fill with map when parameters are linked with each other, and you want to create pairs of required fields*/));
     }
