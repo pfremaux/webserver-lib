@@ -5,6 +5,7 @@ import webserver.ServerProperties;
 import webserver.annotations.Endpoint;
 import webserver.example.hvn.persistence.HvnDataAccess;
 import webserver.example.hvn.persistence.HvnDataAccessImpl;
+import webserver.example.hvn.utils.VideoUtils;
 import webserver.example.hvn.web.models.*;
 import webserver.example.hvn.web.models.tags.GetFileTagRequest;
 import webserver.example.hvn.web.models.tags.GetFileTagResponse;
@@ -12,16 +13,15 @@ import webserver.example.hvn.web.models.tags.SetFileTagRequest;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
+/**
+ * Groups endpoints that are interacting with local files.
+ */
 public class LocalFilesEndpoints {
+    // TODO PFR cacher le cache dans MetadataUtils.java OU HvnDataAccessImpl
 
     public static Map<String, FileIndexedForManifest> cache = new HashMap<>();
     private static int MAX_RESULT = 10;
@@ -29,6 +29,10 @@ public class LocalFilesEndpoints {
     private HvnDataAccess hvnDataAccess = new HvnDataAccessImpl();
 
     public static final String PATH_ROOT_SCAN = "/home/pierre/Download/";
+
+    public LocalFilesEndpoints() {
+        Scan(Map.of());
+    }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////                FILES
@@ -43,17 +47,15 @@ public class LocalFilesEndpoints {
      */
     @Endpoint(method = "POST", path = "/search")
     public SearchFileResponse Search(Map<String, Object> headers, SearchTextRequest searchTextRequest) {
-        // TODO PFR replace with below final List<SimpleFileInfo> search = hvnDataAccess.search(searchTextRequest.getPage());
-        int fileIndex = 0;
-        // TODO PFr replace with database
-        final List<SimpleFileInfo> result = new ArrayList<>();
+        /* TODO PFR replace with below */
+        final List<SimpleFileInfo> result = hvnDataAccess.search(searchTextRequest.getPage());
         int minIndexExpected = searchTextRequest.getPage() * MAX_RESULT;
         int maxIndexExpected = (searchTextRequest.getPage() + 1) * MAX_RESULT;
-        for (FileIndexedForManifest fileIndexedForManifest : cache.values()) {
+        /*for (FileIndexedForManifest fileIndexedForManifest : cache.values()) {
             fileIndex++;
             if (minIndexExpected <= fileIndex && fileIndex <= maxIndexExpected) {
                 final Path fileLocation = Path.of(fileIndexedForManifest.absolutePath());
-                final Path metadataFolder = getMetadataFolder(fileLocation, fileIndexedForManifest.key);
+                final Path metadataFolder = MetadataUtils.getMetadataFolder(fileLocation, fileIndexedForManifest.key);
                 final String image1RelativePath = toRelativePath(metadataFolder, "image1.jpg");
                 final String image2RelativePath = toRelativePath(metadataFolder, "image2.jpg");
                 final FileMetadata metadata = new FileMetadata(
@@ -63,7 +65,7 @@ public class LocalFilesEndpoints {
                 );
                 result.add(new SimpleFileInfo(fileIndexedForManifest.key(), fileLocation.getFileName().toString(), metadata));
             }
-        }
+        }*/
         return new SearchFileResponse(
                 new Pagination(minIndexExpected, maxIndexExpected, searchTextRequest.getPage(), cache.size() % MAX_RESULT),
                 result);
@@ -78,7 +80,8 @@ public class LocalFilesEndpoints {
      */
     @Endpoint(method = "POST", path = "/video/info")
     public VideoInfoResponse GetVideoInfo(Map<String, Object> headers, VideoInfoRequest videoInfoRequest) {
-        final FileIndexedForManifest fileIndexedForManifest = cache.get(videoInfoRequest.getKey());
+        final FileIndexedForManifest fileIndexedForManifest = hvnDataAccess.getFileManifest(videoInfoRequest.getKey());// TODO PFR <-- key est null le client envoi n'imp
+        // TODO PFR Toutes les lignes restantes dans le Utils
         final String absolutePath = fileIndexedForManifest.absolutePath();
         final Path filePath = Path.of(absolutePath);
 
@@ -103,7 +106,7 @@ public class LocalFilesEndpoints {
         final String relativeWebFilePath = absolutePath.substring(indexPath + localRelativeRootPathWithoutDot.length());
 
         final String basePath = ServerProperties.KEY_STATIC_FILES_ENDPOINT_RELATIVE_PATH.getValue().orElseThrow();
-        return (basePath + relativeWebFilePath);
+        return (/*TODO PFR semble useless: basePath + */relativeWebFilePath);
     }
 
     public record FileIndexedForManifest(String key, String absolutePath, List<String> tags) {
@@ -126,18 +129,24 @@ public class LocalFilesEndpoints {
     @Endpoint(method = "GET", path = "/scan")
     public void Scan(Map<String, Object> headers) {
         try {
-            cache = Files.find(Path.of(ServerProperties.KEY_STATIC_FILES_BASE_DIRECTORY.getValue().orElseThrow()), 5, (path, attrib) -> path.getFileName().toString().endsWith("mp4"))
-                    //cache = Files.list(Path.of(ServerProperties.KEY_STATIC_FILES_BASE_DIRECTORY.getValue().orElseThrow()))
-                    .filter(path -> path.toFile().isFile())
-                    .map(path -> path.toAbsolutePath().toString())
-                    .filter(path -> path.endsWith(".mp4")) // TODO PFr improve filter
-                    .map(absolutePath -> new FileIndexedForManifest(toSHA1(absolutePath), absolutePath, List.of()))
-                    .map(this::createMetadataFolder)
-                    .collect(Collectors.toMap(FileIndexedForManifest::key, Function.identity()));
-        } catch (IOException e) {
+            // TODO PFR PRIORITY: lecture de video se fait avec /watch/
+            final Map<String, FileIndexedForManifest> manifestMap = hvnDataAccess.scanAndGetAllKeyToFilesManifest();
+            for (FileIndexedForManifest file : manifestMap.values()) {
+                Path frame1 = Path.of(file.absolutePath).getParent().resolve(file.key).resolve(VideoUtils.getFrameFileName(1));
+                if (!frame1.toFile().exists()) {
+                    VideoUtils.extractFrameWithBlockingProcess(file.absolutePath, 30);
+                    final Path source = Path.of(VideoUtils.getTmpOutputFilePath());
+                    if (source.toFile().exists()) {
+                        Files.move(source, frame1);
+                    }
+                }
+            }
+            cache.putAll(manifestMap);
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////                TAGS
@@ -145,6 +154,7 @@ public class LocalFilesEndpoints {
 
     /**
      * Attach tags to a file.
+     *
      * @param headers
      * @param setFileTagRequest
      */
@@ -156,6 +166,7 @@ public class LocalFilesEndpoints {
 
     /**
      * Get tags from a file.
+     *
      * @param headers
      * @param getFileTagRequest
      * @return
@@ -166,49 +177,4 @@ public class LocalFilesEndpoints {
         return new GetFileTagResponse(fileIndexedForManifest.tags);
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////                Utilities
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private FileIndexedForManifest createMetadataFolder(FileIndexedForManifest manifestFileDatum) {
-        Path pathFile = Path.of(manifestFileDatum.absolutePath);
-        Path directory = pathFile.getParent();
-        Path pathFileMetadata = directory.resolve(toSHA1(manifestFileDatum.absolutePath));
-        if (pathFileMetadata.toFile().exists() && pathFileMetadata.toFile().isDirectory()) {
-            return manifestFileDatum;
-        }
-        if (!pathFileMetadata.toFile().mkdir()) {
-            LogUtils.error("Can't create directory {}", pathFileMetadata);
-        }
-        return manifestFileDatum;
-    }
-
-    private Path getMetadataFolder(Path pathFile, String key) {
-        final Path directory = pathFile.getParent();
-        return directory.resolve(key);
-    }
-
-    // TODO PFR beautify in another class
-    public static String toSHA1(String textToHash) {
-        String sha1 = "";
-        try {
-            MessageDigest crypt = MessageDigest.getInstance("SHA-1");
-            crypt.reset();
-            crypt.update(textToHash.getBytes(StandardCharsets.UTF_8));
-            sha1 = byteToHex(crypt.digest());
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return sha1;
-    }
-
-    private static String byteToHex(final byte[] hash) {
-        Formatter formatter = new Formatter();
-        for (byte b : hash) {
-            formatter.format("%02x", b);
-        }
-        String result = formatter.toString();
-        formatter.close();
-        return result;
-    }
 }

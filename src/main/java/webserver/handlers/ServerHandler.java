@@ -100,7 +100,7 @@ public class ServerHandler {
         int counter = 0;
         String classPath;
         // Loads each classes that have @Endpoint annotation on its methods.
-        // The user will have to do it manually until we add a way to scan a whole project.
+        // The user will have to declare the classes in the properties file manually until we add a way to scan a whole project.
         while ((classPath = System.getProperty("server.handlers." + counter + ".endpoint.class")) != null) {
             final Class<?> aClass = Class.forName(classPath);
             final Object newInstance = aClass.getConstructor().newInstance();
@@ -110,7 +110,7 @@ public class ServerHandler {
 
         // Generate js libs AND Generate the API documentation for each endpoint.
         // TODO PFR Generate API endpoints in a static file instead of doing it at each startup:
-        //  Ideally we shouldn't have to generate it at each startup. The goal is to reduce the time to run the server.
+        //  Ideally we shouldn't have to generate it at each startup. The goal is to reduce the time to start the server.
         final StringBuilder jsScript = new StringBuilder();
         jsScript.append(JsGenerator.asyncCallSource());
         final List<DocumentedEndpoint> endpointsDocs = new ArrayList<>();
@@ -119,7 +119,7 @@ public class ServerHandler {
                         doc -> jsScript.append(JsGenerator.generateJsCall(doc)),
                         doc -> jsScript.append(generateFormCreationInJs(doc)),
                         extensionFromDeveloper,
-                        doc -> LogUtils.debug("Documenting generated endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
+                        doc -> LogUtils.debug("Documentation generated on endpoint %s %s", doc.getHttpMethod(), doc.getPath())));
 
         initializeNativeEndpoints(handlers, authenticationHandler, endpointsDocs, jsScript);
 

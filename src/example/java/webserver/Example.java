@@ -52,6 +52,7 @@ public class Example {
         return new String[]{
                 "Welcome!",
                 //baseUrl + "/web/example/savetext.html"
+                baseUrl + "/web/dashboard/dashboard.html or for more global purpose " +
                 baseUrl + "/self-describe"
         };
     }

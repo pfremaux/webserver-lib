@@ -1,4 +1,4 @@
-package webserver.example.videoedition.model;
+package webserver.example.hvn.web.videoedition.model;
 
 import webserver.annotations.JsonField;
 

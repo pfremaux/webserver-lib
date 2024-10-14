@@ -109,22 +109,23 @@ public class AbstractEndpointHandler {
 
         final byte[] bytes = mutableInputOutputObject.getRequestBody().readAllBytes();
         try {
-            final String data = new String(bytes, StandardCharsets.UTF_8);
+            final String requestBodyAsString = new String(bytes, StandardCharsets.UTF_8);
             if (bodyParameter.isPresent()) {
                 Class<?> bodyParameterType = bodyParameter.get().getType();
-                final Object b = JsonMapper.jsonToObject(new StringBuilder(data), bodyParameterType);
-                if (b == null) {
+                final Object jsonRequestBody = JsonMapper.jsonToObject(new StringBuilder(requestBodyAsString), bodyParameterType);
+                if (jsonRequestBody == null) {
                     return new ProcessRequestStep(BaseError.MISSING_BODY);
                 }
+                // Test if the body has a validation trait. It means programmer added a self validation method.
                 if (bodyParameterType.isAssignableFrom(ValidationTrait.class)) {
-                    ValidationTrait validator = (ValidationTrait) b;
+                    ValidationTrait validator = (ValidationTrait) jsonRequestBody;
                     final Optional<ErrorReport> errorReport = validator.validate();// TODO PFR handle null?
                     if (errorReport.isPresent()) {
                         return new ProcessRequestStep(errorReport.get());
                     }
                 }
 
-                return ProcessRequestStep.ALL_GOOD.withResult(declaredMethod.invoke(instanceToProcess, headers, b));
+                return ProcessRequestStep.ALL_GOOD.withResult(declaredMethod.invoke(instanceToProcess, headers, jsonRequestBody));
             } else {
                 return ProcessRequestStep.ALL_GOOD.withResult(declaredMethod.invoke(instanceToProcess, headers));
             }

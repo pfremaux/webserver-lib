@@ -2,20 +2,48 @@ package webserver.example.hvn.persistence;
 
 import tools.LogUtils;
 import webserver.ServerProperties;
+import webserver.example.hvn.utils.MetadataUtils;
 import webserver.example.hvn.web.LocalFilesEndpoints;
 import webserver.example.hvn.web.models.FileMetadata;
 import webserver.example.hvn.web.models.SimpleFileInfo;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class HvnDataAccessImpl implements HvnDataAccess {
-    public static Map<String, LocalFilesEndpoints.FileIndexedForManifest> cache = new HashMap<>();
+
+
+
+    private static Map<String, LocalFilesEndpoints.FileIndexedForManifest> cache = new HashMap<>();
+
+
     private static int MAX_RESULT = 10;
+
+    @Override
+    public LocalFilesEndpoints.FileIndexedForManifest getFileManifest(String key) {
+        return cache.get(key);
+    }
+
+    public Map<String, LocalFilesEndpoints.FileIndexedForManifest> scanAndGetAllKeyToFilesManifest() throws IOException {
+        cache = Files.find(Path.of(ServerProperties.KEY_STATIC_FILES_BASE_DIRECTORY.getValue().orElseThrow()), 5, (path, attrib) -> path.getFileName().toString().endsWith("mp4"))
+                //cache = Files.list(Path.of(ServerProperties.KEY_STATIC_FILES_BASE_DIRECTORY.getValue().orElseThrow()))
+                .filter(path -> path.toFile().isFile())
+                .map(path -> path.toAbsolutePath().toString())
+                .filter(path -> path.endsWith(".mp4")) // TODO PFr improve filter
+                .map(absolutePath -> new LocalFilesEndpoints.FileIndexedForManifest(MetadataUtils.toSHA1(absolutePath), absolutePath, List.of()))
+                .map(MetadataUtils::createMetadataFolder)
+                .collect(Collectors.toMap(LocalFilesEndpoints.FileIndexedForManifest::key, Function.identity()));
+        return cache;
+    }
+
     @Override
     public List<SimpleFileInfo> search(int page) {
         final List<SimpleFileInfo> result = new ArrayList<>();

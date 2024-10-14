@@ -66,12 +66,11 @@ function removeAllChildren(i) {
       get: (searchParams, prop) => searchParams.get(prop),
     });
     // Get the value of "some_key" in eg "https://example.com/?some_key=some_value"
-    let value = params.key; // "some_value"
-    window.videoKey = value;
-    GetVideoInfo(value, e => {
-        // {'path':1}
+    let videoKey = params.key; // "some_value"
+    window.videoKey = videoKey;
+    GetVideoInfo(videoKey, e => {
         const obj = JSON.parse(e);
-        insertVideo('idVideo', obj.path);
+        insertVideo('idVideo', /*TODO PFR obj.path*/ '/watch'+'/video.mp4');
     });
 
 </script>

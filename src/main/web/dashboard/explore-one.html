@@ -69,7 +69,7 @@ function insertVideo(id, url) {
     GetVideoInfo(value, e => {
         // {'path':1}
         const obj = JSON.parse(e);
-        insertVideo('idVideo', obj.path);
+        insertVideo('idVideo', "/watch"+obj.path);
     });
 
 
