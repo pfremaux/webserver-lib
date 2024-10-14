@@ -17,18 +17,22 @@ function buildTagComponent(containerIdMustExist, tagContainerId, inputTextId, ta
             event.preventDefault();
         } else if (event.which == 32) {
             event.preventDefault();
-            let tagContainer = document.getElementById(tagContainerId);
-            let span = document.createElement("span");
-            span.classList.add("tag");
-            span.innerHTML = inputText.value;
-            tagNameAccumulator(inputText.value);
-            let deleteTag = document.createElement("a");
-            deleteTag.href = "#";
-            deleteTag.onclick = (e) => tagContainer.removeChild(span);
-            deleteTag.innerHTML = "X";
-            span.appendChild(deleteTag);
-            tagContainer.appendChild(span);
-            inputText.value = "";
+            createTag(inputText, tagContainerId);
         }
     }
+}
+
+function createTag(inputText, tagContainerId, tagNameAccumulator) {
+    let tagContainer = document.getElementById(tagContainerId);
+    let span = document.createElement("span");
+    span.classList.add("tag");
+    span.innerHTML = inputText.value;
+    tagNameAccumulator(inputText.value);
+    let deleteTag = document.createElement("a");
+    deleteTag.href = "#";
+    deleteTag.onclick = (e) => tagContainer.removeChild(span);
+    deleteTag.innerHTML = "X";
+    span.appendChild(deleteTag);
+    tagContainer.appendChild(span);
+    inputText.value = "";
 }

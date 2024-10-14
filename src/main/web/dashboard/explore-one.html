@@ -80,6 +80,8 @@ function insertVideo(id, url) {
         setFileTags(window.videoKey, listTags, e => {
             //
             const obj = JSON.parse(e);
+            console.log("%o", obj);
+            createTag(document.getElementById("tagInputTextId"), "tagContainerId", tagName => listTags.push(tagName));
         });
     }
 
